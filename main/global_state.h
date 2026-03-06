@@ -89,6 +89,7 @@ typedef struct
     char * asic_status;
     char * version;
     char * axeOSVersion;
+    float last_submitted_diff;
 } SystemModule;
 
 typedef struct

@@ -94,6 +94,7 @@ export class SystemApiService {
         fallbackStratumCert: "",
         fallbackStratumDecodeCoinbase: true,
         poolDifficulty: 1000,
+        lastSubmittedDiff: 0,
         responseTime: 10,
         isUsingFallbackStratum: 0,
         poolConnectionInfo: "IPv4 (TLS)",

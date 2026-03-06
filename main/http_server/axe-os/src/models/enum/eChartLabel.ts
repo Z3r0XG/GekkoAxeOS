@@ -16,6 +16,7 @@ export enum eChartLabel {
     wifiRssi = 'Wi-Fi RSSI',
     freeHeap = 'Free Heap',
     responseTime = 'Response Time',
+    shareDiff = 'Share Diff',
     none = 'None'
 }
 
