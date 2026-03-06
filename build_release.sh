@@ -213,7 +213,7 @@ EOF
     gh release create "$VERSION" \
         "${UPLOAD_FILES[@]}" \
         --repo Z3r0XG/GekkoAxeOS \
-        --title "GekkoAxeOS $VERSION" \
+        --title "$VERSION" \
         --notes "$RELEASE_NOTES" \
         $PRERELEASE_FLAG
     echo "==> Published: https://github.com/Z3r0XG/GekkoAxeOS/releases/tag/$VERSION"
