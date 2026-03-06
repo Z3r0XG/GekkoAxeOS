@@ -195,24 +195,70 @@ if [[ "$DO_PUBLISH" -eq 1 ]]; then
     UPLOAD_FILES=("$FIRMWARE_OUT" "$WWW_OUT" "${FACTORY_FILES[@]}" "${CONFIG_FILES[@]}")
 
     UPSTREAM_VER="$(echo "$VERSION" | grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+')"
+
+    # Find the most recent previous GekkoAxe tag (excludes current VERSION)
+    PREV_GEKKO_TAG="$(git tag --list '*-gekko*' --sort=-version:refname \
+        | grep -v "^${VERSION}$" | head -1)"
+
+    # Find the upstream base commit so we can exclude upstream commits from the log
+    UPSTREAM_BASE="$(git merge-base HEAD "refs/tags/${UPSTREAM_VER}" 2>/dev/null \
+        || git rev-list --max-parents=0 HEAD)"
+
+    # Build the changelog section
+    if [[ -z "$PREV_GEKKO_TAG" ]]; then
+        # ── First GekkoAxe release ────────────────────────────────────────────
+        CHANGELOG_SECTION="### Added
+
+- **NVS-configurable TPS546 VIN limits** — \`vin_on\`, \`vin_off\`, \`vin_ov_fault\` NVS keys let each board config set its own 12V/5V input voltage thresholds without a firmware rebuild
+- **Multi-board support** — separate factory images for GekkoAxe GT (12V), Gamma 5V, and Gamma 12V
+- **Green default theme** — devices with no saved theme start with the green accent color scheme
+- **Share Diff chart** — tracks actually-submitted share difficulty over time in the home chart dropdown
+
+### Changed
+
+- **Stratum user-agent** — now \`gekkoaxe/{model}/{version}\` (was \`bitaxe/...\`)
+- **OTA update source** — in-UI update checker resolves releases from Z3r0XG/GekkoAxeOS
+- **GekkoAxeOS branding** — page title and topbar logo
+- **Artifact naming** — \`gekkoaxe-factory-{BOARD}-{VERSION}.bin\`, \`gekkoaxe-firmware-{VERSION}.bin\`, \`gekkoaxe-www-{VERSION}.bin\`
+
+### Removed
+
+- Nothing removed: all upstream ESP-Miner functionality is preserved"
+    else
+        # ── Subsequent release — auto-generate from git log ───────────────────
+        # Commits on this branch since the last gekko tag, excluding upstream
+        GEKKO_COMMITS="$(git log --pretty=format:"- %s" \
+            "${PREV_GEKKO_TAG}..HEAD" \
+            --not "${UPSTREAM_BASE}" \
+            --no-merges 2>/dev/null | grep -v '^$')"
+
+        # Also note if the upstream base version changed
+        PREV_UPSTREAM_VER="$(echo "$PREV_GEKKO_TAG" | grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+')"
+        if [[ "$PREV_UPSTREAM_VER" != "$UPSTREAM_VER" ]]; then
+            UPSTREAM_NOTE="
+> Upstream base updated: ${PREV_UPSTREAM_VER} → **${UPSTREAM_VER}** ([upstream changelog](https://github.com/bitaxeorg/ESP-Miner/releases/tag/${UPSTREAM_VER}))"
+        else
+            UPSTREAM_NOTE=""
+        fi
+
+        CHANGELOG_SECTION="### Changes since ${PREV_GEKKO_TAG}
+${UPSTREAM_NOTE}
+
+${GEKKO_COMMITS:-"- No GekkoAxe-specific changes (upstream-only update)"}"
+    fi
+
+    BOARDS_LIST="$(for f in "${CONFIG_FILES[@]}"; do board="$(basename "$f" .cvs)"; echo "- \`${board}\`"; done)"
+
     RELEASE_NOTES="$(cat <<EOF
 ## GekkoAxeOS ${VERSION}
 
 Based on [ESP-Miner ${UPSTREAM_VER}](https://github.com/bitaxeorg/ESP-Miner/releases/tag/${UPSTREAM_VER}).
 
-### GekkoAxe-specific changes vs upstream ESP-Miner
-
-- **Multi-board support** — separate factory images for GekkoAxe GT (12V), Gamma 5V, and Gamma 12V
-- **NVS-configurable TPS546 VIN limits** — \`vin_on\`, \`vin_off\`, \`vin_ov_fault\` NVS keys let each board config set its own input voltage thresholds; 12V boards no longer OV-fault at the 5V default limits
-- **Stratum user-agent** — identifies as \`gekkoaxe/{model}/{version}\` instead of \`bitaxe/...\`
-- **Share Diff chart** — tracks actually-submitted share difficulty over time in the home chart dropdown
-- **OTA updates** — in-UI update checker and download resolve releases from this repo (Z3r0XG/GekkoAxeOS)
-- **GekkoAxeOS branding** — page title and topbar logo
-- **Artifact naming** — \`gekkoaxe-factory-{BOARD}-{VERSION}.bin\` / \`gekkoaxe-firmware-{VERSION}.bin\` / \`gekkoaxe-www-{VERSION}.bin\`
+${CHANGELOG_SECTION}
 
 ### Boards included in this release
 
-$(for f in "${CONFIG_FILES[@]}"; do board="$(basename "$f" .cvs)"; echo "- \`${board}\`"; done)
+${BOARDS_LIST}
 
 ### Flashing
 
