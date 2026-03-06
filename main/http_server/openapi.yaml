@@ -163,6 +163,7 @@ components:
         - resetReason
         - responseTime
         - runningPartition
+        - lastSubmittedDiff
         - sharesAccepted
         - sharesRejected
         - sharesRejectedReasons
@@ -213,6 +214,9 @@ components:
         bestSessionDiff:
           type: number
           description: Best difficulty achieved in current session
+        lastSubmittedDiff:
+          type: number
+          description: Difficulty of the last submitted share
         boardVersion:
           type: string
           description: Hardware board version

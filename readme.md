@@ -1,203 +1,198 @@
-[![](https://dcbadge.vercel.app/api/server/3E8ca2dkcC)](https://discord.gg/osmu)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Z3r0XG/GekkoAxeOS/total)
+![GitHub Release](https://img.shields.io/github/v/release/Z3r0XG/GekkoAxeOS)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/t/Z3r0XG/GekkoAxeOS)
 
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/bitaxeorg/esp-miner/total)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/t/bitaxeorg/esp-miner)
-![GitHub contributors](https://img.shields.io/github/contributors/bitaxeorg/esp-miner)
-![Alt](https://repobeats.axiom.co/api/embed/70889479b1e002c18a184b05bc5cbf2ed3718579.svg "Repobeats analytics image")
+# GekkoAxeOS
 
-# ESP-Miner
-esp-miner is open source ESP32 firmware for the [Bitaxe](https://github.com/bitaxeorg/bitaxe)
+GekkoAxeOS is open-source ESP32-S3 firmware for the **GekkoAxe GT** — a dual BM1370 Bitcoin miner built on the Bitaxe platform. It is a fork of [bitaxeorg/ESP-Miner](https://github.com/bitaxeorg/ESP-Miner), tracking upstream closely and adding GekkoAxe GT-specific support and UI improvements.
 
-If you are looking for premade images to load on your Bitaxe, check out the [latest release](https://github.com/bitaxeorg/ESP-Miner/releases/latest) page. Maybe you want [instructions](https://github.com/bitaxeorg/ESP-Miner/blob/master/flashing.md) for loading factory images.
+For pre-built images ready to flash, see the [latest release](https://github.com/Z3r0XG/GekkoAxeOS/releases/latest).
 
-# Bitaxetool
-We also have a command line python tool for flashing Bitaxe and updating the config called Bitaxetool 
+---
 
-**Bitaxetool Requires Python3.4 or later and pip**
+## Hardware: GekkoAxe GT
 
-Install bitaxetool from pip. pip is included with Python 3.4 but if you need to install it check <https://pip.pypa.io/en/stable/installation/>
+| Parameter | Value |
+|---|---|
+| Board version | `800` |
+| ASICs | 2× BM1370 |
+| Device family | `gammaturbo` |
+| Voltage regulator | TPS546 |
+| Fan controller | EMC2103 |
+| MCU | ESP32-S3-WROOM-1 N16R8 (16 MB Flash, 8 MB Octal SPI PSRAM) |
+| Default ASIC frequency | 600 MHz |
+| Default ASIC voltage | 1100 mV |
 
-```
-pip install --upgrade bitaxetool
-```
-The bitaxetool includes all necessary library for flashing the binaries to the Bitaxe Hardware.
+---
 
-**Notes**
- - The bitaxetool does not work properly with esptool v5.x.x, esptool v4.9.0 or earlier is required.
- - Bitaxetool v0.6.1 - locked to using esptool v4.9.0
+## Changes vs upstream ESP-Miner
 
-```
-pip install bitaxetool==0.6.1
-```
+- **Board `800` support** — `device_config.h` entry for GekkoAxe GT (`gammaturbo`, EMC2103, TPS546, `temp_offset = -10`, `power_consumption_target = 12 W`)
+- **Share Diff chart** — new "Share Diff" option in the home chart dropdown, tracking actually-submitted share difficulty over time from the statistics ring buffer, with a matching live data feed (`lastSubmittedDiff`) in `/api/system/info`
+- **OTA updates point to this repo** — the in-UI update checker and OTA download resolve releases from `Z3r0XG/GekkoAxeOS` instead of `bitaxeorg/ESP-Miner`
+- **Renamed OTA file validation** — firmware OTA expects `GekkoAxeOS-*-firmware.bin`; web OTA expects `GekkoAxeOS-*-www.bin`
+- **GekkoAxeOS branding** — page title, topbar logo replaced with GekkoAxeOS SVG wordmark
+- **`build_release.sh`** — packages three release artifacts automatically: factory image (full 16 MB merge), firmware-only `.bin`, and www-only `.bin`, with the GekkoAxe GT NVS config baked in
 
-- Flash a "factory" image to a Bitaxe to reset to factory settings. Make sure to choose an image built for your hardware version (401) in this case:
+---
 
-```
-bitaxetool --firmware ./esp-miner-factory-401-v2.4.2.bin
-```
-- Flash just the NVS config to a bitaxe:
+## Flashing a release
 
-```
-bitaxetool --config ./config-401.cvs
-```
-- Flash both a factory image _and_ a config to your Bitaxe: note the settings in the config file will overwrite the config already baked into the factory image:
+### Factory flash (first-time or full reset)
 
-```
-bitaxetool --config ./config-401.cvs --firmware ./esp-miner-factory-401-v2.4.2.bin
-```
+The factory image contains the bootloader, partition table, firmware, web UI, and the GekkoAxe GT NVS config all merged into a single file. Flash it at address `0x0`.
 
-## AxeOS API
-The esp-miner UI is called AxeOS and provides an API to expose actions and information.
+**Option A — esptool-js (browser, no install required)**
 
-For more details take a look at [`main/http_server/openapi.yaml`](./main/http_server/openapi.yaml).
+1. Power the GekkoAxe GT via barrel connector and connect USB to your computer
+2. Open [esptool-js](https://espressif.github.io/esptool-js/) in Chrome
+3. Set baud rate to `921600`, click **Connect**, select the serial port
+4. Set Flash Address to `0x0`
+5. Choose the factory image: `GekkoAxeOS-{VERSION}-factory.bin`
+6. Click **Program** and wait for "Leaving..."
+7. Press **RESET** on the device once complete
 
-Available API endpoints:
-  
-**GET**
+**Option B — bitaxetool (command line)**
 
-* `/api/system/info` Get system information
-* `/api/system/asic` Get ASIC settings information
-* `/api/system/statistics` Get system statistics (data logging should be activated)
-* `/api/system/statistics/dashboard` Get system statistics for dashboard
-* `/api/system/wifi/scan` Scan for available Wi-Fi networks
-
-**POST**
-
-* `/api/system/restart` Restart the system
-* `/api/system/identify` Identify the device
-* `/api/system/OTA` Update system firmware
-* `/api/system/OTAWWW` Update AxeOS
-
-**PATCH**
-
-* `/api/system` Update system settings
-
-### API examples in `curl`:
+> bitaxetool v0.6.1 is required (locked to esptool v4.9.0). esptool v5.x is not compatible.
 
 ```bash
-# Get system information
-curl http://YOUR-BITAXE-IP/api/system/info
+pip install bitaxetool==0.6.1
 
-# Get ASIC settings information
-curl http://YOUR-BITAXE-IP/api/system/asic
-
-# Get system statistics
-curl http://YOUR-BITAXE-IP/api/system/statistics
-
-# Get dashboard statistics
-curl http://YOUR-BITAXE-IP/api/system/statistics/dashboard
-
-# Get available Wi-Fi networks
-curl http://YOUR-BITAXE-IP/api/system/wifi/scan
-
-
-# Restart the system
-curl -X POST http://YOUR-BITAXE-IP/api/system/restart
-
-# Let the device say Hi!
-curl -X POST http://YOUR-BITAXE-IP/api/system/identify
-
-# Update system firmware
-curl -X POST \
-     -H "Content-Type: application/octet-stream" \
-     --data-binary "@esp-miner.bin" \
-     http://YOUR-BITAXE-IP/api/system/OTA
-
-# Update AxeOS
-curl -X POST \
-     -H "Content-Type: application/octet-stream" \
-     --data-binary "@www.bin" \
-     http://YOUR-BITAXE-IP/api/system/OTAWWW
-
-
-# Update system settings
-curl -X PATCH http://YOUR-BITAXE-IP/api/system \
-     -H "Content-Type: application/json" \
-     -d '{"fanspeed": "desired_speed_value"}'
+# Flash factory image with GekkoAxe GT config
+bitaxetool --config ./config-GekkoAxe_GT.cvs --firmware ./GekkoAxeOS-{VERSION}-factory.bin
 ```
+
+**Option C — esptool directly**
+
+```bash
+esptool.py --chip esp32s3 -b 921600 --before default_reset --after hard_reset \
+  write_flash --flash_mode dio --flash_size 16MB --flash_freq 80m \
+  0x0 GekkoAxeOS-{VERSION}-factory.bin
+```
+
+### OTA update (device already running GekkoAxeOS)
+
+Navigate to your device's web UI → **Settings** → **Updates**.
+
+- **Firmware update**: upload `GekkoAxeOS-{VERSION}-firmware.bin`
+- **Web UI update**: upload `GekkoAxeOS-{VERSION}-www.bin`
+
+The in-UI update checker automatically compares against the latest release on this repository.
+
+---
 
 ## Administration
 
-The firmware hosts a small web server on port 80 for administrative purposes. Once the Bitaxe device is connected to the local network, the admin web front end may be accessed via a web browser connected to the same network at `http://<IP>`, replacing `IP` with the LAN IP address of the Bitaxe device, or `http://bitaxe`, provided your network supports mDNS configuration.
+Once the device is connected to Wi-Fi, the web UI is accessible at:
 
-### Recovery
+- `http://<device-ip>` — main UI
+- `http://GekkoAxe` — mDNS alias (if your router supports it)
+- `http://<device-ip>/recovery` — recovery page if the main UI is inaccessible (e.g. after a failed www update)
 
-In the event that the admin web front end is inaccessible, for example because of an unsuccessful firmware update (`www.bin`), a recovery page can be accessed at `http://<IP>/recovery`.
+### Unlock overclocking settings
 
-### Unlock Settings
+Append `?oc` to the Settings tab URL to unlock ASIC frequency and core voltage fields. Use with adequate cooling — overclocking without it can damage the hardware.
 
-In order to unlock the Input fields for ASIC Frequency and ASIC Core Voltage you need to append `?oc` to the end of the settings tab URL in your browser. Be aware that without additional cooling overclocking can overheat and/or damage your Bitaxe.
+---
 
-## Development using esp-miner/devcontainer
+## GekkoAxeOS API
 
-This configuration allows you to edit locally and compile the source code using a docker container so you don't have to install the ESP-IDF toolchain and other supporting software on your computer to compile the firmware.
+The web server on port 80 exposes a REST API. Full spec: [`main/http_server/openapi.yaml`](./main/http_server/openapi.yaml).
+
+**GET**
+- `/api/system/info` — system information (hashrate, temps, uptime, pool, `lastSubmittedDiff`, etc.)
+- `/api/system/asic` — ASIC settings
+- `/api/system/statistics?columns=...` — historical stats ring buffer (720 entries)
+- `/api/system/statistics/dashboard` — dashboard stats
+- `/api/system/wifi/scan` — available Wi-Fi networks
+
+**POST**
+- `/api/system/restart` — restart the device
+- `/api/system/identify` — flash LEDs / beep
+- `/api/system/OTA` — upload firmware binary
+- `/api/system/OTAWWW` — upload web UI binary
+
+**PATCH**
+- `/api/system` — update settings (pool, Wi-Fi, fan speed, voltage, frequency, etc.)
+
+```bash
+# Current system info
+curl http://<device-ip>/api/system/info
+
+# Last submitted share difficulty
+curl http://<device-ip>/api/system/info | python3 -m json.tool | grep lastSubmittedDiff
+
+# Update fan speed
+curl -X PATCH http://<device-ip>/api/system \
+     -H "Content-Type: application/json" \
+     -d '{"fanspeed": 80}'
+
+# OTA firmware update
+curl -X POST \
+     -H "Content-Type: application/octet-stream" \
+     --data-binary "@GekkoAxeOS-{VERSION}-firmware.bin" \
+     http://<device-ip>/api/system/OTA
+```
+
+---
+
+## Building from source
 
 ### Prerequisites
 
-- Docker server
+- [ESP-IDF v5.5](https://docs.espressif.com/projects/esp-idf/en/v5.5/esp32s3/get-started/) targeting `esp32s3`
+- Node.js ≥ 22 and npm (for the Angular web UI)
+- Linux or macOS recommended
 
-### Local PC Setup
+### Quick setup
 
-These instructions will assume an installation to your home directory.
-```
-cd ~
-git clone https://github.com/bitaxeorg/ESP-MINER.git
-cd ESP-MINER
-git checkout <the branch you want>
-# The next step builds the docker container that will compile the source code
-# This will take several minutes to finish
-docker build -t espminer-build .devcontainer
-```
-### Building
+```bash
+# Clone this repo
+git clone https://github.com/Z3r0XG/GekkoAxeOS.git
+cd GekkoAxeOS
 
-```
-cd ~/ESP-MINER
-docker run --rm -it -v $PWD:/workspace espminer-build /bin/bash
-git config --global --add safe.directory /workspace    # set git permissions or build will fail; only done once
-cd /workspace
-idf.py build
-```	
-Once the build is done exit out of the docker session and flash the new firmware.
-
-## Development
-
-### Prerequisites
-
-- Install the ESP-IDF toolchain from https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/
-- Install nodejs/npm from https://nodejs.org/en/download
-- (Optional) Install the ESP-IDF extension for VSCode from https://marketplace.visualstudio.com/items?itemName=espressif.esp-idf-extension
-
-### Building
-
-At the root of the repository, run:
-```
-idf.py build && ./merge_bin.sh ./esp-miner-merged.bin
+# Install ESP-IDF v5.5
+git clone --branch v5.5 --depth 1 --recursive https://github.com/espressif/esp-idf.git ~/esp/idf
+~/esp/idf/install.sh esp32s3
 ```
 
-Note: the merge_bin.sh script is a custom script that merges the bootloader, partition table, and the application binary into a single file.
+### Build
 
-Note: if using VSCode, you may have to configure the settings.json file to match your esp hardware version. For example, if your bitaxe has something other than an esp32-s3, you will need to change the version in the `.vscode/settings.json` file.
-
-### Flashing
-
-With the bitaxe connected to your computer via USB, run:
-
-```
-bitaxetool --config ./config-xxx.cvs --firmware ./esp-miner-merged.bin
+```bash
+bash build_release.sh
 ```
 
-where xxx is the config file for your hardware version. You can see the list of available config files in the root of the repository.
+This sources ESP-IDF, builds the full firmware + Angular web UI, and produces three artifacts in `releases/{VERSION}/`:
 
-A custom board version is also possible with `config-custom.cvs`. A custom board needs to be based on an existing `devicemodel` and `asicmodel`.
+| File | Use |
+|---|---|
+| `GekkoAxeOS-{VERSION}-factory.bin` | Full 16 MB factory image, flash at `0x0` |
+| `GekkoAxeOS-{VERSION}-firmware.bin` | Firmware only, for OTA Firmware update |
+| `GekkoAxeOS-{VERSION}-www.bin` | Web UI only, for OTA Web update |
+| `config-GekkoAxe_GT.cvs` | NVS config used to build the factory image |
 
-**Notes:** 
-  - If you are developing within a dev container, you will need to run the bitaxetool command from outside the container. Otherwise, you will get an error about the device not being found.
-  - Some Bitaxe versions can't directly connect to a USB-C port. If yours is affected use a USB-A adapter as a workaround. More about it [here](https://github.com/bitaxeorg/bitaxeGamma/issues/37).
-  - Only ESP32-S3-WROOM-1 module type N16R8 (16MB Flash, 8MB Octal SPI PSRAM) is supported. This model number should be visible on the ESP32 module. Other module types without PSRAM or with Quad SPI PSRAM will not work with the normal firmware. More about it [here](https://github.com/bitaxeorg/ESP-Miner/issues/826).
+To skip the ESP-IDF build and re-package only (after a web UI change):
 
-### Wi-Fi routers
+```bash
+bash build_release.sh --no-build
+```
 
-There are some Wi-Fi routers that will block mining, ASUS Wi-Fi routers & some TP-Link Wi-Fi routers for example.
+### VSCode
+
+Open the repository in VSCode with the [ESP-IDF extension](https://marketplace.visualstudio.com/items?itemName=espressif.esp-idf-extension). The `.vscode/settings.json` is pre-configured for ESP32-S3.
+
+---
+
+## Wi-Fi compatibility note
+
+Some routers block outbound stratum connections — ASUS and certain TP-Link routers are known to do this. If mining doesn't start, try a different router or check firewall settings.
+
+---
+
+## Credits
+
+GekkoAxeOS is built on [ESP-Miner](https://github.com/bitaxeorg/ESP-Miner) by the Bitaxe community. All upstream contributors retain their credit — this fork adds GekkoAxe GT hardware support and UI features on top of their work.
 If you find that your not able to mine / have no hash rate you will need to check the Wi-Fi routers settings and disable the following;
 
 1/ AiProtection

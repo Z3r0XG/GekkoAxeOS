@@ -67,6 +67,7 @@ static const char * STATS_LABEL_FAN2_RPM = "fan2Rpm";
 static const char * STATS_LABEL_WIFI_RSSI = "wifiRssi";
 static const char * STATS_LABEL_FREE_HEAP = "freeHeap";
 static const char * STATS_LABEL_RESPONSE_TIME = "responseTime";
+static const char * STATS_LABEL_SHARE_DIFF = "shareDiff";
 
 static const char * STATS_LABEL_TIMESTAMP = "timestamp";
 
@@ -94,6 +95,7 @@ typedef enum
     SRC_WIFI_RSSI,
     SRC_FREE_HEAP,
     SRC_RESPONSE_TIME,
+    SRC_SHARE_DIFF,
     SRC_NONE // last
 } DataSource;
 
@@ -117,6 +119,7 @@ DataSource strToDataSource(const char * sourceStr)
         if (strcmp(sourceStr, STATS_LABEL_WIFI_RSSI) == 0)    return SRC_WIFI_RSSI;
         if (strcmp(sourceStr, STATS_LABEL_FREE_HEAP) == 0)    return SRC_FREE_HEAP;
         if (strcmp(sourceStr, STATS_LABEL_RESPONSE_TIME) == 0) return SRC_RESPONSE_TIME;
+        if (strcmp(sourceStr, STATS_LABEL_SHARE_DIFF) == 0)    return SRC_SHARE_DIFF;
     }
     return SRC_NONE;
 }
@@ -868,6 +871,7 @@ static esp_err_t GET_system_info(httpd_req_t * req)
     cJSON_AddNumberToObject(root, "bestDiff", GLOBAL_STATE->SYSTEM_MODULE.best_nonce_diff);
     cJSON_AddNumberToObject(root, "bestSessionDiff", GLOBAL_STATE->SYSTEM_MODULE.best_session_nonce_diff);
     cJSON_AddNumberToObject(root, "poolDifficulty", GLOBAL_STATE->pool_difficulty);
+    cJSON_AddNumberToObject(root, "lastSubmittedDiff", GLOBAL_STATE->SYSTEM_MODULE.last_submitted_diff);
 
     cJSON_AddNumberToObject(root, "isUsingFallbackStratum", GLOBAL_STATE->SYSTEM_MODULE.is_using_fallback);
     cJSON_AddStringToObject(root, "poolConnectionInfo", GLOBAL_STATE->SYSTEM_MODULE.pool_connection_info);
@@ -1081,6 +1085,7 @@ static esp_err_t GET_system_statistics(httpd_req_t * req)
     if (dataSelection[SRC_WIFI_RSSI]) { cJSON_AddItemToArray(labelArray, cJSON_CreateString(STATS_LABEL_WIFI_RSSI)); }
     if (dataSelection[SRC_FREE_HEAP]) { cJSON_AddItemToArray(labelArray, cJSON_CreateString(STATS_LABEL_FREE_HEAP)); }
     if (dataSelection[SRC_RESPONSE_TIME]) { cJSON_AddItemToArray(labelArray, cJSON_CreateString(STATS_LABEL_RESPONSE_TIME)); }
+    if (dataSelection[SRC_SHARE_DIFF]) { cJSON_AddItemToArray(labelArray, cJSON_CreateString(STATS_LABEL_SHARE_DIFF)); }
     cJSON_AddItemToArray(labelArray, cJSON_CreateString(STATS_LABEL_TIMESTAMP));
 
     cJSON_AddItemToObject(root, "labels", labelArray);
@@ -1108,6 +1113,7 @@ static esp_err_t GET_system_statistics(httpd_req_t * req)
         if (dataSelection[SRC_WIFI_RSSI]) { cJSON_AddItemToArray(valueArray, cJSON_CreateNumber(statsData.wifiRSSI)); }
         if (dataSelection[SRC_FREE_HEAP]) { cJSON_AddItemToArray(valueArray, cJSON_CreateNumber(statsData.freeHeap)); }
         if (dataSelection[SRC_RESPONSE_TIME]) { cJSON_AddItemToArray(valueArray, cJSON_CreateFloat(statsData.responseTime)); }
+        if (dataSelection[SRC_SHARE_DIFF]) { cJSON_AddItemToArray(valueArray, cJSON_CreateFloat(statsData.shareDiff)); }
         cJSON_AddItemToArray(valueArray, cJSON_CreateNumber(statsData.timestamp));
 
         cJSON_AddItemToArray(statsArray, valueArray);

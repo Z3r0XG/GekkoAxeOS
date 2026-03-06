@@ -777,6 +777,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       case eChartLabel.fanRpm:           return 7000;
       case eChartLabel.fan2Rpm:          return 7000;
       case eChartLabel.responseTime:     return 50;
+      case eChartLabel.shareDiff:        return Math.max(2000, info.poolDifficulty * 2);
       default:                           return 0;
     }
   }
@@ -800,6 +801,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       case eChartLabel.wifiRssi:           return info.wifiRSSI;
       case eChartLabel.freeHeap:           return info.freeHeap;
       case eChartLabel.responseTime:       return info.responseTime;
+      case eChartLabel.shareDiff:          return info.lastSubmittedDiff;
       default:                             return 0.0;
     }
   }
@@ -818,6 +820,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       case eChartLabel.fan2Rpm:          return {suffix: ' rpm', precision: 0};
       case eChartLabel.wifiRssi:         return {suffix: ' dBm', precision: 0};
       case eChartLabel.responseTime:     return {suffix: ' ms', precision: 1};
+      case eChartLabel.shareDiff:        return {suffix: '', precision: 1};
       default:                           return {suffix: '', precision: 0};
     }
   }

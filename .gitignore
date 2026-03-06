@@ -30,6 +30,9 @@ config.bin
 config.cvs
 managed_components/*
 
+# Release artifacts
+releases/
+
 # System files
 .DS_Store
 Thumbs.db
