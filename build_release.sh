@@ -194,11 +194,37 @@ if [[ "$DO_PUBLISH" -eq 1 ]]; then
 
     UPLOAD_FILES=("$FIRMWARE_OUT" "$WWW_OUT" "${FACTORY_FILES[@]}" "${CONFIG_FILES[@]}")
 
+    UPSTREAM_VER="$(echo "$VERSION" | grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+')"
+    RELEASE_NOTES="$(cat <<EOF
+## GekkoAxeOS ${VERSION}
+
+Based on [ESP-Miner ${UPSTREAM_VER}](https://github.com/bitaxeorg/ESP-Miner/releases/tag/${UPSTREAM_VER}).
+
+### GekkoAxe-specific changes vs upstream ESP-Miner
+
+- **Multi-board support** — separate factory images for GekkoAxe GT (12V), Gamma 5V, and Gamma 12V
+- **NVS-configurable TPS546 VIN limits** — \`vin_on\`, \`vin_off\`, \`vin_ov_fault\` NVS keys let each board config set its own input voltage thresholds; 12V boards no longer OV-fault at the 5V default limits
+- **Stratum user-agent** — identifies as \`gekkoaxe/{model}/{version}\` instead of \`bitaxe/...\`
+- **Share Diff chart** — tracks actually-submitted share difficulty over time in the home chart dropdown
+- **OTA updates** — in-UI update checker and download resolve releases from this repo (Z3r0XG/GekkoAxeOS)
+- **GekkoAxeOS branding** — page title and topbar logo
+- **Artifact naming** — \`gekkoaxe-factory-{BOARD}-{VERSION}.bin\` / \`gekkoaxe-firmware-{VERSION}.bin\` / \`gekkoaxe-www-{VERSION}.bin\`
+
+### Boards included in this release
+
+$(for f in "${CONFIG_FILES[@]}"; do board="$(basename "$f" .cvs)"; echo "- \`${board}\`"; done)
+
+### Flashing
+
+See the [README](https://github.com/Z3r0XG/GekkoAxeOS#flashing-a-release) for full flashing instructions.
+EOF
+)"
+
     gh release create "$VERSION" \
         "${UPLOAD_FILES[@]}" \
         --repo Z3r0XG/GekkoAxeOS \
         --title "GekkoAxeOS $VERSION" \
-        --generate-notes \
+        --notes "$RELEASE_NOTES" \
         $PRERELEASE_FLAG
     echo "==> Published: https://github.com/Z3r0XG/GekkoAxeOS/releases/tag/$VERSION"
 fi
