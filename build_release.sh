@@ -52,6 +52,51 @@ if [[ "$DO_PUBLISH" -eq 1 ]]; then
     fi
 fi
 
+# ── Upstream pre-release check (only when publishing) ─────────────────────────
+# Walk back through commit history to find the upstream base commit, then check
+# whether that commit is tagged as a pre-release (beta/rc) on either:
+#   - the local tag name (matches *b[0-9]* or *rc*)
+#   - the GitHub release API (prerelease=true)
+# If the base is a pre-release, this release MUST also be pre-release.
+# Publishing a stable release on top of a beta/pre-release base is forbidden.
+IS_PRERELEASE=0
+UPSTREAM_BASE_TAG=""
+
+if [[ "$DO_PUBLISH" -eq 1 ]] && git remote get-url upstream > /dev/null 2>&1; then
+    git fetch upstream --tags --quiet 2>/dev/null || true
+    UPSTREAM_BASE="$(git log --format="%H" HEAD | while read -r sha; do
+        if git merge-base --is-ancestor "$sha" upstream/master 2>/dev/null; then
+            echo "$sha"; break
+        fi
+    done)"
+    if [[ -n "$UPSTREAM_BASE" ]]; then
+        UPSTREAM_BASE_TAG="$(git describe --tags --exact-match "$UPSTREAM_BASE" 2>/dev/null || true)"
+        if [[ -n "$UPSTREAM_BASE_TAG" ]]; then
+            # Pre-release tag pattern: contains b[0-9], rc, alpha, beta
+            if echo "$UPSTREAM_BASE_TAG" | grep -qE '[bB][0-9]+$|[-_]?(rc|alpha|beta)[0-9]*$'; then
+                IS_PRERELEASE=1
+                echo "==> Upstream base '$UPSTREAM_BASE_TAG' is a pre-release tag."
+            else
+                # Double-check GitHub in case upstream marks a plain tag as pre-release
+                GH_PRERELEASE="$(gh api "repos/bitaxeorg/ESP-Miner/releases/tags/${UPSTREAM_BASE_TAG}" \
+                    --jq '.prerelease' 2>/dev/null || echo "")"
+                if [[ "$GH_PRERELEASE" == "true" ]]; then
+                    IS_PRERELEASE=1
+                    echo "==> Upstream base '$UPSTREAM_BASE_TAG' is marked pre-release on GitHub."
+                fi
+            fi
+        fi
+    fi
+fi
+
+if [[ "$DO_PUBLISH" -eq 1 ]]; then
+    if [[ "$IS_PRERELEASE" -eq 1 ]]; then
+        echo "==> This release will be published as PRE-RELEASE (upstream base is a pre-release)."
+    else
+        echo "==> This release will be published as STABLE."
+    fi
+fi
+
 # ── Source ESP-IDF ─────────────────────────────────────────────────────────────
 if [[ ! -f "$IDF_PATH/export.sh" ]]; then
     echo "ERROR: ESP-IDF not found at $IDF_PATH"
@@ -136,6 +181,8 @@ ls -lh "$RELEASE_DIR"
 if [[ "$DO_PUBLISH" -eq 1 ]]; then
     echo ""
     echo "==> Publishing GitHub release $VERSION..."
+    PRERELEASE_FLAG=""
+    [[ "$IS_PRERELEASE" -eq 1 ]] && PRERELEASE_FLAG="--prerelease"
     gh release create "$VERSION" \
         "$RELEASE_DIR/GekkoAxeOS-${VERSION}-factory.bin" \
         "$RELEASE_DIR/GekkoAxeOS-${VERSION}-firmware.bin" \
@@ -143,6 +190,7 @@ if [[ "$DO_PUBLISH" -eq 1 ]]; then
         "$RELEASE_DIR/config-GekkoAxe_GT.cvs" \
         --repo Z3r0XG/GekkoAxeOS \
         --title "GekkoAxeOS $VERSION" \
-        --generate-notes
+        --generate-notes \
+        $PRERELEASE_FLAG
     echo "==> Published: https://github.com/Z3r0XG/GekkoAxeOS/releases/tag/$VERSION"
 fi
