@@ -21,4 +21,7 @@ autofanspeed,data,u16,1
 fanspeed,data,u16,100
 selftest,data,u16,0
 overheat_mode,data,u16,0
+vin_on,data,string,11.0
+vin_off,data,string,10.5
+vin_ov_fault,data,string,14.0
 

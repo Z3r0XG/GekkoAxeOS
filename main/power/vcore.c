@@ -6,6 +6,7 @@
 #include "INA260.h"
 #include "TPS546.h"
 #include "adc.h"
+#include "nvs_config.h"
 #include "driver/gpio.h"
 #include "vcore.h"
 
@@ -77,6 +78,24 @@ static TPS546_CONFIG get_tps546_config(const FamilyConfig * family)
         config.TPS546_INIT_SYNC_CONFIG = 0x10;    // Disable SYNC
         break;
     }
+
+    // Apply NVS overrides if set (non-zero = user-configured)
+    float vin_on = nvs_config_get_float(NVS_CONFIG_VIN_ON);
+    float vin_off = nvs_config_get_float(NVS_CONFIG_VIN_OFF);
+    float vin_ov_fault = nvs_config_get_float(NVS_CONFIG_VIN_OV_FAULT);
+    if (vin_on > 0) {
+        ESP_LOGI(TAG, "NVS VIN_ON override: %.2fV (family default was %.2fV)", vin_on, config.TPS546_INIT_VIN_ON);
+        config.TPS546_INIT_VIN_ON = vin_on;
+    }
+    if (vin_off > 0) {
+        ESP_LOGI(TAG, "NVS VIN_OFF override: %.2fV (family default was %.2fV)", vin_off, config.TPS546_INIT_VIN_OFF);
+        config.TPS546_INIT_VIN_OFF = vin_off;
+    }
+    if (vin_ov_fault > 0) {
+        ESP_LOGI(TAG, "NVS VIN_OV_FAULT override: %.2fV (family default was %.2fV)", vin_ov_fault, config.TPS546_INIT_VIN_OV_FAULT_LIMIT);
+        config.TPS546_INIT_VIN_OV_FAULT_LIMIT = vin_ov_fault;
+    }
+    ESP_LOGI(TAG, "TPS546 VIN limits: ON=%.2fV OFF=%.2fV OV_FAULT=%.2fV", config.TPS546_INIT_VIN_ON, config.TPS546_INIT_VIN_OFF, config.TPS546_INIT_VIN_OV_FAULT_LIMIT);
 
     return config;
 }
