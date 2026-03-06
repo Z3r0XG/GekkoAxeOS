@@ -22,7 +22,9 @@ For pre-built images ready to flash, see the [latest release](https://github.com
 
 ---
 
-## Hardware: GekkoAxe GT
+## Supported Hardware
+
+### GekkoAxe GT
 
 | Parameter | Value |
 |---|---|
@@ -32,8 +34,33 @@ For pre-built images ready to flash, see the [latest release](https://github.com
 | Voltage regulator | TPS546 |
 | Fan controller | EMC2103 |
 | MCU | ESP32-S3-WROOM-1 N16R8 (16 MB Flash, 8 MB Octal SPI PSRAM) |
+| Input voltage | 12 V |
 | Default ASIC frequency | 600 MHz |
 | Default ASIC voltage | 1100 mV |
+
+### GekkoAxe Gamma (5V)
+
+| Parameter | Value |
+|---|---|
+| Board version | `601` |
+| ASICs | 1× BM1370 |
+| Device family | `gamma` |
+| Voltage regulator | TPS546 |
+| Input voltage | 5 V |
+| Default ASIC frequency | 525 MHz |
+| Default ASIC voltage | 1150 mV |
+
+### GekkoAxe Gamma (12V)
+
+| Parameter | Value |
+|---|---|
+| Board version | `601` |
+| ASICs | 1× BM1370 |
+| Device family | `gamma` |
+| Voltage regulator | TPS546 |
+| Input voltage | 12 V |
+| Default ASIC frequency | 525 MHz |
+| Default ASIC voltage | 1150 mV |
 
 ---
 
