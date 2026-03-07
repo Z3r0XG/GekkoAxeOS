@@ -53,8 +53,8 @@ export class UpdateComponent {
     const file = event.files[0];
     this.firmwareUpload.clear(); // clear the file upload component
 
-    if (!file.name.endsWith('-firmware.bin')) {
-      this.toastrService.error('Incorrect file. Please select a GekkoAxeOS-*-firmware.bin file.');
+    if (!file.name.startsWith('gekkoaxe-firmware-') || !file.name.endsWith('.bin')) {
+      this.toastrService.error('Incorrect file. Please select a gekkoaxe-firmware-*.bin file.');
       return;
     }
 
@@ -90,8 +90,8 @@ export class UpdateComponent {
     const file = event.files[0];
     this.websiteUpload.clear(); // clear the file upload component
 
-    if (!file.name.endsWith('-www.bin')) {
-      this.toastrService.error('Incorrect file. Please select a GekkoAxeOS-*-www.bin file.');
+    if (!file.name.startsWith('gekkoaxe-www-') || !file.name.endsWith('.bin')) {
+      this.toastrService.error('Incorrect file. Please select a gekkoaxe-www-*.bin file.');
       return;
     }
 

@@ -60,6 +60,10 @@ echo "── Web UI — GitHub update service ───────────�
 check "update service points to Z3r0XG/GekkoAxeOS" "main/http_server/axe-os/src/app/services/github-update.service.ts"        "Z3r0XG/GekkoAxeOS"
 
 echo ""
+echo "── Stratum user-agent ───────────────────────────────"
+check "stratum subscribe uses gekkoaxe/ not bitaxe/" "components/stratum/stratum_api.c" 'gekkoaxe/%s/%s'
+
+echo ""
 echo "── Release tooling ──────────────────────────────────"
 check_file "build_release.sh exists"              "build_release.sh"
 check      "build_release.sh has prerelease check" "build_release.sh"                     "IS_PRERELEASE"

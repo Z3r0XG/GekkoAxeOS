@@ -29,31 +29,39 @@
 
                 <ng-template #afterCheck>
                     <ng-container *ngIf="latestRelease$ | async as latestRelease">
-                        <h3>Latest Release:
-                            <a style="text-decoration: underline;" target="_blank"
-                            [href]="latestRelease.html_url">{{latestRelease.name}}</a>
-                        </h3>
-
-                        <div class="text-orange-500 mb-3">Download both files for update!</div>
-
-                        <div *ngFor="let asset of latestRelease.assets">
-                            <div *ngIf="asset.name.endsWith('-firmware.bin')">
+                        <ng-container *ngIf="info$ | async as info">
+                            <h3>Latest Release:
                                 <a style="text-decoration: underline;" target="_blank"
-                                    [href]="asset.browser_download_url">{{asset.name}}</a>
-                            </div>
-                            <div *ngIf="asset.name.endsWith('-www.bin')">
-                                <a style="text-decoration: underline;" target="_blank"
-                                    [href]="asset.browser_download_url">{{asset.name}}</a>
-                            </div>
-                        </div>
+                                [href]="latestRelease.html_url">{{latestRelease.name}}</a>
+                            </h3>
 
-                        <a class="text-500 underline block mt-3 cursor-pointer" (click)="modalComponent.isVisible = true">
-                            Release Notes
-                        </a>
+                            <ng-container *ngIf="latestRelease.tag_name === info.version; else updateAvailable">
+                                <div class="text-green-500 mb-3">You are up to date!</div>
+                            </ng-container>
 
-                        <app-modal [headline]="latestRelease.name">
-                            <div [innerHTML]="simpleMarkdownParser(latestRelease.body)"></div>
-                        </app-modal>
+                            <ng-template #updateAvailable>
+                                <div class="text-orange-500 mb-3">Update available! Download both files:</div>
+
+                                <div *ngFor="let asset of latestRelease.assets">
+                                    <div *ngIf="asset.name.startsWith('gekkoaxe-firmware-') && asset.name.endsWith('.bin')">
+                                        <a style="text-decoration: underline;" target="_blank"
+                                            [href]="asset.browser_download_url">{{asset.name}}</a>
+                                    </div>
+                                    <div *ngIf="asset.name.startsWith('gekkoaxe-www-') && asset.name.endsWith('.bin')">
+                                        <a style="text-decoration: underline;" target="_blank"
+                                            [href]="asset.browser_download_url">{{asset.name}}</a>
+                                    </div>
+                                </div>
+                            </ng-template>
+
+                            <a class="text-500 underline block mt-3 cursor-pointer" (click)="modalComponent.isVisible = true">
+                                Release Notes
+                            </a>
+
+                            <app-modal [headline]="latestRelease.name">
+                                <div [innerHTML]="simpleMarkdownParser(latestRelease.body)"></div>
+                            </app-modal>
+                        </ng-container>
                     </ng-container>
                 </ng-template>
             </div>
@@ -65,7 +73,7 @@
                 <p-fileUpload #websiteUpload [customUpload]="true" mode="basic" accept=".bin" (uploadHandler)="otaWWWUpdate($event)"
                     [auto]="true" chooseLabel="Browse"></p-fileUpload>
 
-                <small>(GekkoAxeOS-*-www.bin)</small>
+                <small>(gekkoaxe-www-*.bin)</small>
             </div>
         </div>
         <div class="col-12 lg:col-6 xl:col-4">
@@ -74,7 +82,7 @@
                 <p-fileUpload #firmwareUpload [customUpload]="true" mode="basic" accept=".bin" (uploadHandler)="otaUpdate($event)"
                     [auto]="true" chooseLabel="Browse"></p-fileUpload>
 
-                <small>(GekkoAxeOS-*-firmware.bin)</small>
+                <small>(gekkoaxe-firmware-*.bin)</small>
             </div>
 
         </div>
