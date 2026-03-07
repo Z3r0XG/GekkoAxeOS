@@ -217,12 +217,6 @@ No keys set — the `gamma` family default (4.8 V ON / 4.5 V OFF / 6.5 V OV faul
 
 ---
 
-## Wi-Fi compatibility note
-
-Some routers block outbound stratum connections — ASUS and certain TP-Link routers are known to do this. If mining doesn't start, try a different router or check firewall settings.
-
----
-
 ## Credits
 
 GekkoAxeOS is built on [ESP-Miner](https://github.com/bitaxeorg/ESP-Miner) by the Bitaxe community. All upstream contributors retain their credit — this fork adds GekkoAxe GT hardware support and UI features on top of their work.
