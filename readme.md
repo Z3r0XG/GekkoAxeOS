@@ -185,10 +185,6 @@ To skip the ESP-IDF build and re-package only (after a web UI change):
 bash build_release.sh --no-build
 ```
 
-### VSCode
-
-Open the repository in VSCode with the [ESP-IDF extension](https://marketplace.visualstudio.com/items?itemName=espressif.esp-idf-extension). The `.vscode/settings.json` is pre-configured for ESP32-S3.
-
 ---
 
 ## NVS voltage configuration
