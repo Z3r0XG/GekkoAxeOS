@@ -1,5 +1,5 @@
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Z3r0XG/GekkoAxeOS/total)
-![GitHub Release](https://img.shields.io/github/v/release/Z3r0XG/GekkoAxeOS)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Z3r0XG/GekkoAxeOS/total?include_prereleases)
+![GitHub Release](https://img.shields.io/github/v/release/Z3r0XG/GekkoAxeOS?include_prereleases)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/Z3r0XG/GekkoAxeOS)
 
 # GekkoAxeOS
