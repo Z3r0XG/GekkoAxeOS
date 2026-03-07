@@ -8,9 +8,8 @@
 >
 > **GekkoAxeOS is a community firmware for the GekkoAxe hardware — it is not produced by [GekkоScience](https://www.gekkoscience.com).**
 >
-> - "GekkoAxe" refers to the [open-source hardware](https://github.com/sidehack-gekko/GekkoAxe) by GekkоScience
-> - Provided **AS-IS**, with no warranty — flashing third-party firmware may void your warranty and could damage hardware if used incorrectly
-> - Use at your own risk
+> - "GekkoAxe" refers to the [open-source hardware](https://github.com/sidehack-gekko/GekkoAxe) by GekkоScience.
+> - Provided **AS-IS**, with no warranty — flashing third-party firmware may void your warranty and could damage hardware if used incorrectly. Use at your own risk.
 
 GekkoAxeOS is open-source ESP32-S3 firmware for the **[GekkoAxe GT](https://github.com/sidehack-gekko/GekkoAxe)** — a dual BM1370 Bitcoin miner by [GekkоScience](https://www.gekkoscience.com), built on the Bitaxe platform. It is a fork of [bitaxeorg/ESP-Miner](https://github.com/bitaxeorg/ESP-Miner), tracking upstream closely and adding GekkoAxe GT-specific support and UI improvements.
 
