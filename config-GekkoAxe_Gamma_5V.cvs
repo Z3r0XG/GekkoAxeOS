@@ -7,7 +7,7 @@ stratumurl,data,string,solo.heliospool.com
 stratumport,data,u16,3333
 stratumuser,data,string,bc1q8qkesw5kyplv7hdxyseqls5m78w5tqdfd40lf5.GekkoGamma
 stratumpass,data,string,x
-fbstratumurl,data,string,stratum.kano.is
+fbstratumurl,data,string,solo.ckpool.org
 fbstratumport,data,u16,3333
 fbstratumuser,data,string,bc1q8qkesw5kyplv7hdxyseqls5m78w5tqdfd40lf5.GekkoGamma
 fbstratumpass,data,string,x
