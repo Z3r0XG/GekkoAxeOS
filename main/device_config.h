@@ -42,6 +42,9 @@ typedef enum
     GAMMA_DUO,
     SUPRA_HEX,
     GAMMA_TURBO,
+    GEKKO_GT,
+    GEKKO_GAMMA,
+    GEKKO_GAMMA_12V,
 } Family;
 
 typedef struct {
@@ -108,7 +111,10 @@ static const FamilyConfig FAMILY_SUPRA       = { .id = SUPRA,       .name = "Sup
 static const FamilyConfig FAMILY_GAMMA       = { .id = GAMMA,       .name = "Gamma",      .asic = ASIC_BM1370, .asic_count = 1, .max_power =  40, .power_offset = 5,  .nominal_voltage = 5,  .voltage_domains = 1, .swarm_color = "green",    };
 static const FamilyConfig FAMILY_GAMMA_DUO   = { .id = GAMMA_DUO,       .name = "GammaDuo",      .asic = ASIC_BM1370XP, .asic_count = 2, .max_power =  40, .power_offset = 5,  .nominal_voltage = 5,  .voltage_domains = 1, .swarm_color = "green",    };
 static const FamilyConfig FAMILY_SUPRA_HEX   = { .id = SUPRA_HEX,   .name = "SupraHex",   .asic = ASIC_BM1368, .asic_count = 6, .max_power = 120, .power_offset = 25, .nominal_voltage = 12, .voltage_domains = 3, .swarm_color = "darkblue", };
-static const FamilyConfig FAMILY_GAMMA_TURBO = { .id = GAMMA_TURBO, .name = "GammaTurbo", .asic = ASIC_BM1370, .asic_count = 2, .max_power =  60, .power_offset = 10, .nominal_voltage = 12, .voltage_domains = 1, .swarm_color = "cyan",     };
+static const FamilyConfig FAMILY_GAMMA_TURBO    = { .id = GAMMA_TURBO,    .name = "GammaTurbo",   .asic = ASIC_BM1370, .asic_count = 2, .max_power =  60, .power_offset = 10, .nominal_voltage = 12, .voltage_domains = 1, .swarm_color = "cyan",  };
+static const FamilyConfig FAMILY_GEKKO_GT       = { .id = GEKKO_GT,       .name = "GekkoAxe-GT",    .asic = ASIC_BM1370, .asic_count = 2, .max_power =  60, .power_offset = 10, .nominal_voltage = 12, .voltage_domains = 1, .swarm_color = "cyan",  };
+static const FamilyConfig FAMILY_GEKKO_GAMMA    = { .id = GEKKO_GAMMA,    .name = "GekkoAxe-γ",     .asic = ASIC_BM1370, .asic_count = 1, .max_power =  40, .power_offset = 5,  .nominal_voltage = 5,  .voltage_domains = 1, .swarm_color = "green", };
+static const FamilyConfig FAMILY_GEKKO_GAMMA_12V= { .id = GEKKO_GAMMA_12V,.name = "GekkoAxe-γ-12",  .asic = ASIC_BM1370, .asic_count = 1, .max_power =  50, .power_offset = 5,  .nominal_voltage = 12, .voltage_domains = 1, .swarm_color = "green", };
 
 static const FamilyConfig default_families[] = {
     FAMILY_MAX,
@@ -118,6 +124,9 @@ static const FamilyConfig default_families[] = {
     FAMILY_GAMMA,
     FAMILY_SUPRA_HEX,
     FAMILY_GAMMA_TURBO,
+    FAMILY_GEKKO_GT,
+    FAMILY_GEKKO_GAMMA,
+    FAMILY_GEKKO_GAMMA_12V,
 };
 
 static const DeviceConfig default_configs[] = {
@@ -142,7 +151,11 @@ static const DeviceConfig default_configs[] = {
     { .board_version = "650",  .family = FAMILY_GAMMA_DUO,   .EMC2101 = true, .emc_ideality_factor = 0x24, .emc_beta_compensation = 0x00,                     .TPS546 = true,                                                           .power_consumption_target = 35, },
     { .board_version = "701",  .family = FAMILY_SUPRA_HEX,   .EMC2302 = true, .TMP1075 = true,                                            .temp_offset = 10,  .TPS546 = true,                                                           .power_consumption_target = 90, },
     { .board_version = "702",  .family = FAMILY_SUPRA_HEX,   .EMC2302 = true, .TMP1075 = true,                                            .temp_offset = 10,  .TPS546 = true,                                                           .power_consumption_target = 90, },
+    { .board_version = "800",  .family = FAMILY_GAMMA_TURBO, .EMC2103 = true,                                                             .temp_offset = -10, .TPS546 = true,                                                           .power_consumption_target = 12, },
     { .board_version = "801",  .family = FAMILY_GAMMA_TURBO, .EMC2103 = true,                                                             .temp_offset = 0,   .TPS546 = true,                                                           .power_consumption_target = 36, },
+    { .board_version = "gekko-800",     .family = FAMILY_GEKKO_GT,        .EMC2103 = true,                                                             .temp_offset = -10, .TPS546 = true,                                                           .power_consumption_target = 12, },
+    { .board_version = "gekko-601",     .family = FAMILY_GEKKO_GAMMA,     .EMC2101 = true, .emc_ideality_factor = 0x24, .emc_beta_compensation = 0x00,                     .TPS546 = true,                                                           .power_consumption_target = 19, },
+    { .board_version = "gekko-601-12",  .family = FAMILY_GEKKO_GAMMA_12V, .EMC2101 = true, .emc_ideality_factor = 0x24, .emc_beta_compensation = 0x00,                     .TPS546 = true,                                                           .power_consumption_target = 25, },
 };
 
 esp_err_t device_config_init(void * pvParameters);

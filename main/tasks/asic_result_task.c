@@ -56,6 +56,7 @@ void ASIC_result_task(void *pvParameters)
         if (nonce_diff >= active_job->pool_diff)
         {
             char * user = GLOBAL_STATE->SYSTEM_MODULE.is_using_fallback ? GLOBAL_STATE->SYSTEM_MODULE.fallback_pool_user : GLOBAL_STATE->SYSTEM_MODULE.pool_user;
+            GLOBAL_STATE->SYSTEM_MODULE.last_submitted_diff = (float)nonce_diff;
             int ret = STRATUM_V1_submit_share(
                 GLOBAL_STATE->transport,
                 GLOBAL_STATE->send_uid++,

@@ -148,6 +148,7 @@ void statistics_task(void * pvParameters)
                 statsData.wifiRSSI = wifiRSSI;
                 statsData.freeHeap = esp_get_free_heap_size();
                 statsData.responseTime = sys_module->response_time;
+                statsData.shareDiff = sys_module->last_submitted_diff;
 
                 addStatisticData(&statsData);
             }

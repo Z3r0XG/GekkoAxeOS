@@ -25,6 +25,7 @@ struct StatisticsData
     int8_t wifiRSSI;
     uint32_t freeHeap;
     float responseTime;
+    float shareDiff;
 };
 
 bool getStatisticData(uint16_t index, StatisticsDataPtr dataOut);
