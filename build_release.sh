@@ -68,11 +68,11 @@ UPSTREAM_BASE_TAG=""
 
 if [[ "$DO_PUBLISH" -eq 1 ]] && git remote get-url upstream > /dev/null 2>&1; then
     git fetch upstream --tags --quiet 2>/dev/null || true
-    UPSTREAM_BASE="$(git log --format="%H" HEAD | while read -r sha; do
+    UPSTREAM_BASE="$(git log --format="%H" HEAD | { while read -r sha; do
         if git merge-base --is-ancestor "$sha" upstream/master 2>/dev/null; then
             echo "$sha"; break
         fi
-    done)"
+    done; true; })"
     if [[ -n "$UPSTREAM_BASE" ]]; then
         UPSTREAM_BASE_TAG="$(git describe --tags --exact-match "$UPSTREAM_BASE" 2>/dev/null || true)"
         if [[ -n "$UPSTREAM_BASE_TAG" ]]; then
