@@ -65,6 +65,8 @@ Hardware specification details are pending confirmation.
 - **OTA updates point to this repo** — the in-UI update checker and OTA download resolve releases from `Z3r0XG/GekkoAxeOS` instead of `bitaxeorg/ESP-Miner`
 - **OTA file naming** — firmware OTA expects `gekkoaxe-firmware-*.bin`; web OTA expects `gekkoaxe-www-*.bin`
 - **Boot logo screens** — GekkoAxe logo (128×22, RGB565) replaces the BitAxe logo on the first boot splash, with device name and board version stacked below; GekkoScience logo (128×32, RGB565) shown on the second boot splash
+- **Expert Mode toggle** — Settings page toggle replaces the `?oc` URL parameter for enabling custom ASIC frequency and voltage; persists to NVS
+- **Fan controller improvements** — Auto fan continues working if any individual ASIC temperature sensor stops reporting; fails safe to 100% if all sensors are lost; more aggressive response to rising temperatures with a gradual spin-down to prevent oscillation
 
 ---
 
@@ -112,9 +114,9 @@ Once the device is connected to Wi-Fi, the web UI is accessible at:
 - `http://GekkoAxe` — mDNS alias (if your router supports it)
 - `http://<device-ip>/recovery` — recovery page if the main UI is inaccessible (e.g. after a failed www update)
 
-### Unlock overclocking settings
+### Expert Mode (overclocking)
 
-Append `?oc` to the Settings tab URL to unlock ASIC frequency and core voltage fields. Use with adequate cooling — overclocking without it can damage the hardware.
+The Settings page has an **Expert Mode** toggle. When enabled, ASIC frequency and core voltage fields switch from safe preset dropdowns to free-entry inputs. The setting persists across reboots via NVS. Use with adequate cooling.
 
 ---
 

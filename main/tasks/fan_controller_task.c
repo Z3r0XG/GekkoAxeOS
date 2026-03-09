@@ -20,9 +20,13 @@
 #define POLL_TIME_MS 100
 #define LOG_TIME_MS 2000
 
-#define PID_P 3.0
-#define PID_I 0.1
-#define PID_D 1.0
+#define PID_P 15.0
+#define PID_I 2.0
+#define PID_D 5.0
+
+// Asymmetric slew rate: spin up instantly, slow down at max 1% per 100ms cycle
+// Prevents oscillation while still reacting aggressively to rising temps
+#define FAN_DECREASE_RATE_PER_CYCLE 1.0f
 
 static const char * TAG = "fan_controller";
 
@@ -73,13 +77,20 @@ void FAN_CONTROLLER_task(void * pvParameters)
                     pid_set_output_limits(&pid, pid_output_min, 100);
                 }
 
-                if (power_management->chip_temp_avg >= 0) { // Ignore invalid temperature readings (-1)
-                    if (power_management->chip_temp2_avg > power_management->chip_temp_avg) {
-                        pid_input = power_management->chip_temp2_avg;
-                    } else {
-                        pid_input = power_management->chip_temp_avg;
-                    }
-                    
+                // Use the highest valid ASIC temperature; fall back to whichever sensor is working
+                float t1 = power_management->chip_temp_avg;
+                float t2 = power_management->chip_temp2_avg;
+                float best_temp = -1;
+                if (t1 >= 0 && t2 >= 0) {
+                    best_temp = t1 > t2 ? t1 : t2;
+                } else if (t1 >= 0) {
+                    best_temp = t1;
+                } else if (t2 >= 0) {
+                    best_temp = t2;
+                }
+
+                if (best_temp >= 0) {
+                    pid_input = best_temp;
                     pid_compute(&pid);
                     // Clamp PID output to valid range to prevent overshoot above 100%
                     if (pid_output > 100) pid_output = 100;
@@ -88,8 +99,21 @@ void FAN_CONTROLLER_task(void * pvParameters)
                     // ESP_LOGD(TAG, "DEBUG: PID raw output: %.2f%%, Input: %.1f, SetPoint: %.1f", pid_output, pid_input, pid_setPoint);
 
                     if (fabs(power_management->fan_perc - pid_output) > EPSILON) {
-                        power_management->fan_perc = pid_output;
-                        if (Thermal_set_fan_percent(&GLOBAL_STATE->DEVICE_CONFIG, pid_output / 100.0f) != ESP_OK) {
+                        float new_perc;
+                        if (pid_output > power_management->fan_perc) {
+                            // Temp rising or still above target — spin up immediately
+                            new_perc = pid_output;
+                        } else if (pid_input > pid_setPoint) {
+                            // Still above target — hold current fan speed, don't reduce yet
+                            new_perc = power_management->fan_perc;
+                        } else if (power_management->fan_perc - pid_output > FAN_DECREASE_RATE_PER_CYCLE) {
+                            // Below target — slow down gradually
+                            new_perc = power_management->fan_perc - FAN_DECREASE_RATE_PER_CYCLE;
+                        } else {
+                            new_perc = pid_output;
+                        }
+                        power_management->fan_perc = new_perc;
+                        if (Thermal_set_fan_percent(&GLOBAL_STATE->DEVICE_CONFIG, new_perc / 100.0f) != ESP_OK) {
                             exit(EXIT_FAILURE);
                         }
                     }
@@ -100,10 +124,11 @@ void FAN_CONTROLLER_task(void * pvParameters)
                         ESP_LOGI(TAG, "Temp: %.1f °C, SetPoint: %.1f °C, Output: %.1f%%", pid_input, pid_setPoint, pid_output);
                     }
                 } else {
-                    if (fabs(power_management->fan_perc - 70) > EPSILON) {
-                        ESP_LOGI(TAG, "Temperature sensor starting up, setting fan to 70%%");
-                        power_management->fan_perc = 70;
-                        if (Thermal_set_fan_percent(&GLOBAL_STATE->DEVICE_CONFIG, 0.7f) != ESP_OK) {
+                    // Both temperature sensors invalid — run fan at 100% to prevent thermal damage
+                    if (fabs(power_management->fan_perc - 100) > EPSILON) {
+                        ESP_LOGW(TAG, "All temperature sensors invalid, setting fan to 100%%");
+                        power_management->fan_perc = 100;
+                        if (Thermal_set_fan_percent(&GLOBAL_STATE->DEVICE_CONFIG, 1.0f) != ESP_OK) {
                             exit(EXIT_FAILURE);
                         }
                     }
