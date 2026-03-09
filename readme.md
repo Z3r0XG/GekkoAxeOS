@@ -60,6 +60,8 @@ Hardware specification details are pending confirmation.
 - **Logs page improvements** — configurable log buffer size (50–5000 lines) with +/- controls; download logs as a clean `.txt` file
 - **WiFi AP renamed** — setup-mode access point shows as `GekkoAxe_XXYY` instead of `Bitaxe_XXYY`
 - **Last submitted share diff** — live `lastSubmittedDiff` stat in `/api/system/info` and selectable as a chart series on the dashboard
+- **Board temperature** — EMC fan controller internal die temperature exposed as `boardTemp` in `/api/system/info`, shown as a progress bar in the Heat card, and available as a chart series on the dashboard
+- **Jobs counter** — stratum work received since last pool connection exposed as `workReceived` in `/api/system/info`, shown in the Shares card
 - **OTA updates point to this repo** — the in-UI update checker and OTA download resolve releases from `Z3r0XG/GekkoAxeOS` instead of `bitaxeorg/ESP-Miner`
 - **OTA file naming** — firmware OTA expects `gekkoaxe-firmware-*.bin`; web OTA expects `gekkoaxe-www-*.bin`
 
@@ -120,7 +122,7 @@ Append `?oc` to the Settings tab URL to unlock ASIC frequency and core voltage f
 The web server on port 80 exposes a REST API. Full spec: [`main/http_server/openapi.yaml`](./main/http_server/openapi.yaml).
 
 **GET**
-- `/api/system/info` — system information (hashrate, temps, uptime, pool, `lastSubmittedDiff`, etc.)
+- `/api/system/info` — system information (hashrate, temps, uptime, pool, `lastSubmittedDiff`, `workReceived`, `boardTemp`, etc.)
 - `/api/system/asic` — ASIC settings
 - `/api/system/statistics?columns=...` — historical stats ring buffer (720 entries)
 - `/api/system/statistics/dashboard` — dashboard stats
