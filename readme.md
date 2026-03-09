@@ -4,22 +4,20 @@
 
 # GekkoAxeOS
 
-> ## ⚠️ Disclaimer
->
-> **GekkoAxeOS is a community firmware for the GekkoAxe hardware — it is not produced by [GekkоScience](https://www.gekkoscience.com).**
->
-> - "GekkoAxe" refers to the [open-source hardware](https://github.com/sidehack-gekko/GekkoAxe) by GekkоScience.
-> - Provided **AS-IS**, with no warranty — flashing third-party firmware may void your warranty and could damage hardware if used incorrectly. Use at your own risk.
-
-GekkoAxeOS is open-source ESP32-S3 firmware for the **[GekkoAxe](https://github.com/sidehack-gekko/GekkoAxe)** line of Bitcoin miners by [GekkоScience](https://www.gekkoscience.com), built on the Bitaxe platform. It is a fork of [bitaxeorg/ESP-Miner](https://github.com/bitaxeorg/ESP-Miner), tracking upstream closely and adding GekkoAxe hardware support and UI improvements.
+GekkoAxeOS is open-source community firmware for the **[GekkoAxe](https://github.com/sidehack-gekko/GekkoAxe)** line of Bitcoin miners by [GekkоScience](https://www.gekkoscience.com). It is a fork of [bitaxeorg/ESP-Miner](https://github.com/bitaxeorg/ESP-Miner), tracking upstream closely. This project is not affiliated with GekkоScience.
 
 For pre-built images ready to flash, see the [latest release](https://github.com/Z3r0XG/GekkoAxeOS/releases/latest).
+
+<a href="media/GekkoAxeOS-hashrate.jpg"><img src="media/GekkoAxeOS-hashrate.jpg" height="200"></a>
+<a href="media/GekkoAxeOS-graph.jpg"><img src="media/GekkoAxeOS-graph.jpg" height="200"></a>
+<a href="media/GekkoAxeOS-pool.jpg"><img src="media/GekkoAxeOS-pool.jpg" height="200"></a>
+<a href="media/GekkoAxeOS-system.jpg"><img src="media/GekkoAxeOS-system.jpg" height="200"></a>
 
 ---
 
 ## Supported Hardware
 
-### GekkoAxe GT ✅ (verified)
+### GekkoAxe GT
 
 | Parameter | Value |
 |---|---|
@@ -33,19 +31,33 @@ For pre-built images ready to flash, see the [latest release](https://github.com
 | Default ASIC frequency | 600 MHz |
 | Default ASIC voltage | 1100 mV |
 
-### GekkoAxe Gamma ⏳ (in progress)
+### GekkoAxe Gamma 5 V
 
-Firmware support for the Gamma line is in development. Factory images are not yet available.
+| Parameter | Value |
+|---|---|
+| Board version | `gekko-601` |
+| ASICs | 1× BM1370 |
+| Device family | `GekkoAxe-γ` |
+| Voltage regulator | TPS546 |
+| Fan controller | EMC2101 |
+| MCU | ESP32-S3-WROOM-1 N16R8 (16 MB Flash, 8 MB Octal SPI PSRAM) |
+| Input voltage | 5 V |
+| Default ASIC frequency | 525 MHz |
+| Default ASIC voltage | 1150 mV |
+
+### GekkoAxe Gamma 12 V
+
+Hardware specification details are pending confirmation.
 
 ---
 
 ## Changes vs upstream ESP-Miner
 
-- **GekkoAxe hardware support** — dedicated device family entries (`GekkoAxe-GT`) with correct TPS546 multi-phase config, EMC2103 fan controller, and board-specific power parameters
-- **Per-device stratum user-agent** — identifies as `GekkoAxe-GT/{version}` instead of `bitaxe/...`
+- **GekkoAxe hardware support** — dedicated device family entries for each board variant (`GekkoAxe-GT`, `GekkoAxe-γ`) with correct regulator config, fan controller, and board-specific power parameters
+- **Per-device stratum user-agent** — identifies as `GekkoAxe-GT/{version}`, `GekkoAxe-γ/{version}` instead of `bitaxe/...`
 - **NVS-configurable TPS546 VIN limits** — `vin_on`, `vin_off`, and `vin_ov_fault` NVS keys allow per-board override of TPS546 input voltage thresholds (see [NVS voltage configuration](#nvs-voltage-configuration))
 - **GekkoAxeOS branding** — UI title, page labels, and topbar reflect GekkoAxeOS; favicon replaced with GekkoScience logo
-- **Logs page improvements** — configurable log buffer size (50–5000 lines) with +/- controls; download logs as a clean `.txt` file (ANSI codes stripped)
+- **Logs page improvements** — configurable log buffer size (50–5000 lines) with +/- controls; download logs as a clean `.txt` file
 - **WiFi AP renamed** — setup-mode access point shows as `GekkoAxe_XXYY` instead of `Bitaxe_XXYY`
 - **Last submitted share diff** — live `lastSubmittedDiff` stat in `/api/system/info` and selectable as a chart series on the dashboard
 - **OTA updates point to this repo** — the in-UI update checker and OTA download resolve releases from `Z3r0XG/GekkoAxeOS` instead of `bitaxeorg/ESP-Miner`
