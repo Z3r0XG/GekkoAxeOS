@@ -35,6 +35,7 @@ releases/
 
 # Maintainer-only tools (not for public repo)
 build_release.sh
+flash_device.sh
 release-notes/
 
 # System files
