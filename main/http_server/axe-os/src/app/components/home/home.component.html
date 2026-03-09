@@ -342,7 +342,7 @@
                             text="Board Temperature"
                             tooltip="Fan controller internal sensor (board ambient)."
                         />
-                        <span>{{info.boardTemp!}} &deg;C</span>
+                        <span>{{info.boardTemp! | number: '1.0-1'}} &deg;C</span>
                     </h6>
                     <p-progressBar [value]="(info.boardTemp! / 60) * 100" [styleClass]="'p-progressbar--thin'">
                         <ng-template pTemplate="content" let-value></ng-template>
