@@ -7,10 +7,12 @@ stratumurl,data,string,solo.heliospool.com
 stratumport,data,u16,3333
 stratumuser,data,string,bc1q8qkesw5kyplv7hdxyseqls5m78w5tqdfd40lf5.GekkoGT
 stratumpass,data,string,x
-fbstratumurl,data,string,solo.ckpool.org
+fbstratumurl,data,string,solo-bch.heliospool.com
 fbstratumport,data,u16,3333
-fbstratumuser,data,string,bc1q8qkesw5kyplv7hdxyseqls5m78w5tqdfd40lf5.GekkoGT
+fbstratumuser,data,string,qz85msghggld3smflk8flv0yza4c0c5drqgdgeruug.GekkoGT
 fbstratumpass,data,string,x
+stratumdecode2,data,u16,3
+fbstratumdec2,data,u16,3
 asicfrequency,data,u16,600
 asicvoltage,data,u16,1100
 boardversion,data,string,gekko-800

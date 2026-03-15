@@ -343,13 +343,28 @@ static void decode_mining_notification(GlobalState * GLOBAL_STATE, const mining_
     memset(result, 0, sizeof(mining_notification_result_t));
 
     const char * user = GLOBAL_STATE->SYSTEM_MODULE.is_using_fallback ? GLOBAL_STATE->SYSTEM_MODULE.fallback_pool_user : GLOBAL_STATE->SYSTEM_MODULE.pool_user;
-    bool decode_coinbase = GLOBAL_STATE->SYSTEM_MODULE.is_using_fallback ? GLOBAL_STATE->SYSTEM_MODULE.fallback_pool_decode_coinbase : GLOBAL_STATE->SYSTEM_MODULE.pool_decode_coinbase;
+    uint8_t coinbase_network = GLOBAL_STATE->SYSTEM_MODULE.is_using_fallback ? GLOBAL_STATE->SYSTEM_MODULE.fallback_pool_coinbase_network : GLOBAL_STATE->SYSTEM_MODULE.pool_coinbase_network;
+
+    // Resolve AUTO: detect network from payout address prefix
+    if (coinbase_network == COINBASE_NETWORK_AUTO) {
+        // Strip .workername suffix for detection
+        char addr_buf[128];
+        strncpy(addr_buf, user, sizeof(addr_buf) - 1);
+        addr_buf[sizeof(addr_buf) - 1] = '\0';
+        char *dot = strrchr(addr_buf, '.');
+        if (dot) *dot = '\0';
+        const char *addr = addr_buf;
+        // Strip bitcoincash: prefix if present
+        if (strncasecmp(addr, "bitcoincash:", 12) == 0) addr += 12;
+        // q.../p... = BCH CashAddr; all others default to BTC
+        coinbase_network = (addr[0] == 'q' || addr[0] == 'p') ? COINBASE_NETWORK_BCH : COINBASE_NETWORK_BTC;
+    }
 
     if (coinbase_process_notification(mining_notification,
                                      GLOBAL_STATE->extranonce_str,
                                      GLOBAL_STATE->extranonce_2_len,
                                      user,
-                                     decode_coinbase,
+                                     coinbase_network,
                                      result) != ESP_OK) {
         ESP_LOGE(TAG, "Failed to process mining notification");
         free(result);

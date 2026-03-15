@@ -848,6 +848,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     return dotIndex !== -1 ? user.substring(0, dotIndex) : user;
   }
 
+  getCoinLabel(info: ISystemInfo): string {
+    const network = info.isUsingFallbackStratum ? info.fallbackStratumDecodeCoinbase : info.stratumDecodeCoinbase;
+    if (network === 2) return 'BCH';
+    if (network === 1) return 'BTC';
+    if (network === 3) {
+      // Auto: detect from payout address, same logic as C
+      const addr = this.getAddressPart(this.activePoolUser).replace(/^bitcoincash:/i, '');
+      return (addr[0] === 'q' || addr[0] === 'p') ? 'BCH' : 'BTC';
+    }
+    return '';
+  }
+
   getSuffixPart(user: string): string {
     const dotIndex = user.lastIndexOf('.');
     return dotIndex !== -1 ? '.' + user.substring(dotIndex + 1) : '';
