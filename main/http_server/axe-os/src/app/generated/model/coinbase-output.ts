@@ -21,6 +21,6 @@ export interface CoinbaseOutput {
     /**
      * True if this output pays the configured user address
      */
-    isUserOutput: boolean;
+    isUserOutput?: boolean;
 }
 

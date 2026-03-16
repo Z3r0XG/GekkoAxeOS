@@ -1,6 +1,7 @@
 #include "esp_log.h"
 #include "system.h"
 #include "global_state.h"
+#include "nvs_config.h"
 #include <lwip/tcpip.h>
 #include <lwip/netdb.h>
 #include "stratum_task.h"
@@ -15,8 +16,6 @@
 #include "coinbase_decoder.h"
 #include <esp_heap_caps.h>
 
-#define MAX_RETRY_ATTEMPTS 3
-#define MAX_CRITICAL_RETRY_ATTEMPTS 5
 #define MAX_EXTRANONCE_2_LEN 32
 
 #define PORT CONFIG_STRATUM_PORT
@@ -32,8 +31,6 @@
 #define STRATUM_PW CONFIG_STRATUM_PW
 #define FALLBACK_STRATUM_PW CONFIG_FALLBACK_STRATUM_PW
 #define STRATUM_DIFFICULTY CONFIG_STRATUM_DIFFICULTY
-
-#define TRANSPORT_TIMEOUT_MS 5000
 
 #define BUFFER_SIZE 1024
 
@@ -263,6 +260,8 @@ void stratum_primary_heartbeat(void * pvParameters)
 {
     GlobalState * GLOBAL_STATE = (GlobalState *) pvParameters;
 
+    int transport_timeout_ms = (int) nvs_config_get_u16(NVS_CONFIG_STRATUM_TIMEOUT_MS);
+
     ESP_LOGI(TAG, "Starting heartbeat thread for primary pool: %s:%d", primary_stratum_url, primary_stratum_port);
     vTaskDelay(10000 / portTICK_PERIOD_MS);
 
@@ -297,7 +296,7 @@ void stratum_primary_heartbeat(void * pvParameters)
             continue;
         }
 
-        esp_err_t err = esp_transport_connect(transport, primary_stratum_url, primary_stratum_port, TRANSPORT_TIMEOUT_MS);
+        esp_err_t err = esp_transport_connect(transport, primary_stratum_url, primary_stratum_port, transport_timeout_ms);
         if (err != ESP_OK) {
             ESP_LOGD(TAG, "Heartbeat. Failed connect check: %s:%d (errno %d: %s)", primary_stratum_url, primary_stratum_port, err, strerror(err));
             esp_transport_close(transport);
@@ -313,7 +312,7 @@ void stratum_primary_heartbeat(void * pvParameters)
 
         char recv_buffer[BUFFER_SIZE];
         memset(recv_buffer, 0, BUFFER_SIZE);
-        int bytes_received = esp_transport_read(transport, recv_buffer, BUFFER_SIZE - 1, TRANSPORT_TIMEOUT_MS); 
+        int bytes_received = esp_transport_read(transport, recv_buffer, BUFFER_SIZE - 1, transport_timeout_ms); 
 
         esp_transport_close(transport);
 
@@ -441,6 +440,12 @@ void stratum_task(void * pvParameters)
     int retry_attempts = 0;
     int retry_critical_attempts = 0;
 
+    int max_retry_attempts = (int) nvs_config_get_u16(NVS_CONFIG_STRATUM_RETRY_MAX);
+    int max_critical_retry_attempts = (int) nvs_config_get_u16(NVS_CONFIG_STRATUM_CRIT_RETRY_MAX);
+    int transport_timeout_ms = (int) nvs_config_get_u16(NVS_CONFIG_STRATUM_TIMEOUT_MS);
+    ESP_LOGI(TAG, "Connection: retry=%d crit_retry=%d timeout=%dms",
+             max_retry_attempts, max_critical_retry_attempts, transport_timeout_ms);
+
     xTaskCreateWithCaps(stratum_primary_heartbeat, "stratum primary heartbeat", 8192, pvParameters, 1, NULL, MALLOC_CAP_SPIRAM);
 
     ESP_LOGI(TAG, "Opening connection to pool: %s:%d", stratum_url, port);
@@ -451,7 +456,7 @@ void stratum_task(void * pvParameters)
             continue;
         }
 
-        if (retry_attempts >= MAX_RETRY_ATTEMPTS)
+        if (retry_attempts >= max_retry_attempts)
         {
             if (GLOBAL_STATE->SYSTEM_MODULE.fallback_pool_url == NULL || GLOBAL_STATE->SYSTEM_MODULE.fallback_pool_url[0] == '\0') {
                 ESP_LOGI(TAG, "Unable to switch to fallback. No url configured. (retries: %d)...", retry_attempts);
@@ -499,7 +504,7 @@ void stratum_task(void * pvParameters)
         // Check if transport was initialized
         if(GLOBAL_STATE->transport == NULL) {
             ESP_LOGE(TAG, "Transport initialization failed.");
-            if (++retry_critical_attempts > MAX_CRITICAL_RETRY_ATTEMPTS) {
+            if (++retry_critical_attempts > max_critical_retry_attempts) {
                 ESP_LOGE(TAG, "Max retry attempts reached, restarting...");
                 esp_restart();
             }
@@ -509,7 +514,7 @@ void stratum_task(void * pvParameters)
         retry_critical_attempts = 0;
 
         ESP_LOGI(TAG, "Transport initialized, connecting to %s:%d", stratum_url, port);
-        esp_err_t ret = esp_transport_connect(GLOBAL_STATE->transport, stratum_url, port, TRANSPORT_TIMEOUT_MS);
+        esp_err_t ret = esp_transport_connect(GLOBAL_STATE->transport, stratum_url, port, transport_timeout_ms);
         if (ret != ESP_OK) {
             retry_attempts ++;
             ESP_LOGE(TAG, "Transport unable to connect to %s:%d (errno %d). Attempt: %d", stratum_url, port, ret, retry_attempts);

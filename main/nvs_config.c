@@ -109,9 +109,27 @@ static Settings settings[NVS_CONFIG_COUNT] = {
     [NVS_CONFIG_TPS546]                                = {.nvs_key_name = "TPS546",          .type = TYPE_BOOL},
     [NVS_CONFIG_TMP1075]                               = {.nvs_key_name = "TMP1075",         .type = TYPE_BOOL},
     [NVS_CONFIG_POWER_CONSUMPTION_TARGET]              = {.nvs_key_name = "power_cons_tgt",  .type = TYPE_U16},
-    [NVS_CONFIG_VIN_ON]                                = {.nvs_key_name = "vin_on",           .type = TYPE_FLOAT, .default_value = {.f = 0}},
-    [NVS_CONFIG_VIN_OFF]                               = {.nvs_key_name = "vin_off",          .type = TYPE_FLOAT, .default_value = {.f = 0}},
-    [NVS_CONFIG_VIN_OV_FAULT]                          = {.nvs_key_name = "vin_ov_fault",     .type = TYPE_FLOAT, .default_value = {.f = 0}},
+    [NVS_CONFIG_VIN_ON]                                = {.nvs_key_name = "vin_on",           .type = TYPE_FLOAT, .default_value = {.f = 0}, .danger_zone_gated = true},
+    [NVS_CONFIG_VIN_OFF]                               = {.nvs_key_name = "vin_off",          .type = TYPE_FLOAT, .default_value = {.f = 0}, .danger_zone_gated = true},
+    [NVS_CONFIG_VIN_OV_FAULT]                          = {.nvs_key_name = "vin_ov_fault",     .type = TYPE_FLOAT, .default_value = {.f = 0}, .danger_zone_gated = true},
+
+    // Danger zone — gated by NVS_CONFIG_DANGER_ZONE; no rest_name (not REST/Web UI exposed)
+    [NVS_CONFIG_DANGER_ZONE]          = {.nvs_key_name = "dangerzone",     .type = TYPE_BOOL,  .default_value = {.b = false}},
+    [NVS_CONFIG_PID_P]                = {.nvs_key_name = "pid_p",          .type = TYPE_FLOAT, .default_value = {.f = 15.0f},  .danger_zone_gated = true},
+    [NVS_CONFIG_PID_I]                = {.nvs_key_name = "pid_i",          .type = TYPE_FLOAT, .default_value = {.f = 2.0f},   .danger_zone_gated = true},
+    [NVS_CONFIG_PID_D]                = {.nvs_key_name = "pid_d",          .type = TYPE_FLOAT, .default_value = {.f = 5.0f},   .danger_zone_gated = true},
+    [NVS_CONFIG_FAN_DECREASE_RATE]    = {.nvs_key_name = "fan_dec_rate",   .type = TYPE_FLOAT, .default_value = {.f = 1.0f},   .danger_zone_gated = true},
+    [NVS_CONFIG_THROTTLE_TEMP]        = {.nvs_key_name = "throttle_temp",  .type = TYPE_FLOAT, .default_value = {.f = 75.0f},  .danger_zone_gated = true},
+    [NVS_CONFIG_SAFE_TEMP]            = {.nvs_key_name = "safe_temp",      .type = TYPE_FLOAT, .default_value = {.f = 45.0f},  .danger_zone_gated = true},
+    [NVS_CONFIG_VR_THROTTLE_TEMP]     = {.nvs_key_name = "vr_thr_temp",    .type = TYPE_FLOAT, .default_value = {.f = 105.0f}, .danger_zone_gated = true},
+    [NVS_CONFIG_ASIC_REDUCTION]       = {.nvs_key_name = "asic_reduction", .type = TYPE_FLOAT, .default_value = {.f = 100.0f}, .danger_zone_gated = true},
+    [NVS_CONFIG_STRATUM_RETRY_MAX]    = {.nvs_key_name = "strat_retry",    .type = TYPE_U16,   .default_value = {.u16 = 3}},
+    [NVS_CONFIG_STRATUM_CRIT_RETRY_MAX] = {.nvs_key_name = "strat_crit_rty", .type = TYPE_U16, .default_value = {.u16 = 5}},
+    [NVS_CONFIG_STRATUM_TIMEOUT_MS]   = {.nvs_key_name = "strat_timeout",  .type = TYPE_U16,   .default_value = {.u16 = 5000}},
+    [NVS_CONFIG_SELFTEST_DIFF]        = {.nvs_key_name = "st_difficulty",  .type = TYPE_U16,   .default_value = {.u16 = 16}},
+    [NVS_CONFIG_SELFTEST_POWER_MARGIN]= {.nvs_key_name = "st_pwr_margin",  .type = TYPE_U16,   .default_value = {.u16 = 3}},
+    [NVS_CONFIG_SELFTEST_VCORE_MIN]   = {.nvs_key_name = "st_vcore_min",   .type = TYPE_U16,   .default_value = {.u16 = 1000}},
+    [NVS_CONFIG_SELFTEST_VCORE_MAX]   = {.nvs_key_name = "st_vcore_max",   .type = TYPE_U16,   .default_value = {.u16 = 1300}},
 };
 
 Settings *nvs_config_get_settings(NvsConfigKey key)
@@ -230,13 +248,31 @@ esp_err_t nvs_config_init(void)
         return err;
     }
 
+    // Pre-load the danger_zone gate key before anything else
+    {
+        Settings *dz = &settings[NVS_CONFIG_DANGER_ZONE];
+        uint16_t val;
+        esp_err_t ret = nvs_get_u16(handle, dz->nvs_key_name, &val);
+        dz->value.b = (ret == ESP_OK) ? (val != 0) : dz->default_value.b;
+        ESP_LOGI(TAG, "danger_zone: %s", dz->value.b ? "enabled" : "disabled");
+    }
+
     // Load all
     for (NvsConfigKey key = 0; key < NVS_CONFIG_COUNT; key++) {
         Settings *setting = &settings[key];
 
+        if (key == NVS_CONFIG_DANGER_ZONE) continue; // already loaded above
+
+        if (setting->danger_zone_gated && !settings[NVS_CONFIG_DANGER_ZONE].value.b) {
+            setting->value = setting->default_value;
+            ESP_LOGD(TAG, "%-20s = (danger-zone gated, using default)", setting->nvs_key_name);
+            continue;
+        }
+
         nvs_config_init_fallback(key, setting);
 
         esp_err_t ret;
+        bool from_nvs = false;
         switch (setting->type) {
             case TYPE_STR: {
                 size_t len = 0;
@@ -249,24 +285,28 @@ esp_err_t nvs_config_init(void)
                 } else {
                     setting->value.str = strdup(setting->default_value.str);
                 }
+                from_nvs = (ret == ESP_OK);
                 break;
             }
             case TYPE_U16: {
                 uint16_t val;
                 ret = nvs_get_u16(handle, setting->nvs_key_name, &val);
                 setting->value.u16 = (ret == ESP_OK) ? val : setting->default_value.u16;
+                from_nvs = (ret == ESP_OK);
                 break;
             }
             case TYPE_I32: {
                 int32_t val;
                 ret = nvs_get_i32(handle, setting->nvs_key_name, &val);
                 setting->value.i32 = (ret == ESP_OK) ? val : setting->default_value.i32;
+                from_nvs = (ret == ESP_OK);
                 break;
             }
             case TYPE_U64: {
                 uint64_t val;
                 ret = nvs_get_u64(handle, setting->nvs_key_name, &val);
                 setting->value.u64 = (ret == ESP_OK) ? val : setting->default_value.u64;
+                from_nvs = (ret == ESP_OK);
                 break;
             }
             case TYPE_FLOAT: {
@@ -274,14 +314,29 @@ esp_err_t nvs_config_init(void)
                 size_t len = sizeof(buf);
                 ret = nvs_get_str(handle, setting->nvs_key_name, buf, &len);
                 setting->value.f = (ret == ESP_OK) ? atof(buf) : setting->default_value.f;
+                from_nvs = (ret == ESP_OK);
                 break;
             }
             case TYPE_BOOL: {
                 uint16_t val;
                 ret = nvs_get_u16(handle, setting->nvs_key_name, &val);
                 setting->value.b = (ret == ESP_OK) ? (val != 0) : setting->default_value.b;
+                from_nvs = (ret == ESP_OK);
                 break;
             }
+        }
+
+        if (from_nvs) {
+            switch (setting->type) {
+                case TYPE_STR:   ESP_LOGD(TAG, "%-20s = \"%s\" (NVS)", setting->nvs_key_name, setting->value.str); break;
+                case TYPE_U16:   ESP_LOGD(TAG, "%-20s = %u (NVS)",     setting->nvs_key_name, setting->value.u16); break;
+                case TYPE_I32:   ESP_LOGD(TAG, "%-20s = %d (NVS)",     setting->nvs_key_name, setting->value.i32); break;
+                case TYPE_U64:   ESP_LOGD(TAG, "%-20s = %llu (NVS)",   setting->nvs_key_name, setting->value.u64); break;
+                case TYPE_FLOAT: ESP_LOGD(TAG, "%-20s = %.4f (NVS)",   setting->nvs_key_name, setting->value.f);   break;
+                case TYPE_BOOL:  ESP_LOGD(TAG, "%-20s = %s (NVS)",     setting->nvs_key_name, setting->value.b ? "true" : "false"); break;
+            }
+        } else {
+            ESP_LOGD(TAG, "%-20s = (default)", setting->nvs_key_name);
         }
     }
 

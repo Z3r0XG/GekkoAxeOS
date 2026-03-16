@@ -20,19 +20,19 @@
 #define POLL_TIME_MS 100
 #define LOG_TIME_MS 2000
 
-#define PID_P 15.0
-#define PID_I 2.0
-#define PID_D 5.0
-
-// Asymmetric slew rate: spin up instantly, slow down at max 1% per 100ms cycle
-// Prevents oscillation while still reacting aggressively to rising temps
-#define FAN_DECREASE_RATE_PER_CYCLE 1.0f
-
 static const char * TAG = "fan_controller";
 
 void FAN_CONTROLLER_task(void * pvParameters)
 {
     ESP_LOGI(TAG, "Starting");
+
+    float pid_p = nvs_config_get_float(NVS_CONFIG_PID_P);
+    float pid_i = nvs_config_get_float(NVS_CONFIG_PID_I);
+    float pid_d = nvs_config_get_float(NVS_CONFIG_PID_D);
+    // Asymmetric slew rate: spin up instantly, slow down at max 1% per 100ms cycle
+    // Prevents oscillation while still reacting aggressively to rising temps
+    float fan_decrease_rate = nvs_config_get_float(NVS_CONFIG_FAN_DECREASE_RATE);
+    ESP_LOGI(TAG, "PID: P=%.4f I=%.4f D=%.4f  fan_dec_rate=%.4f", pid_p, pid_i, pid_d, fan_decrease_rate);
 
     PIDController pid = {0};
 
@@ -47,7 +47,7 @@ void FAN_CONTROLLER_task(void * pvParameters)
     PowerManagementModule * power_management = &GLOBAL_STATE->POWER_MANAGEMENT_MODULE;
 
     // Initialize PID controller with pid_d_startup and PID_REVERSE directly
-    pid_init(&pid, &pid_input, &pid_output, &pid_setPoint, PID_P, PID_I, PID_D, PID_P_ON_E, PID_REVERSE);
+    pid_init(&pid, &pid_input, &pid_output, &pid_setPoint, pid_p, pid_i, pid_d, PID_P_ON_E, PID_REVERSE);
     pid_set_sample_time(&pid, POLL_TIME_MS); // Sample time in ms
     pid_set_mode(&pid, AUTOMATIC);        // This calls pid_initialize() internally
 
@@ -106,9 +106,9 @@ void FAN_CONTROLLER_task(void * pvParameters)
                         } else if (pid_input > pid_setPoint) {
                             // Still above target — hold current fan speed, don't reduce yet
                             new_perc = power_management->fan_perc;
-                        } else if (power_management->fan_perc - pid_output > FAN_DECREASE_RATE_PER_CYCLE) {
+                        } else if (power_management->fan_perc - pid_output > fan_decrease_rate) {
                             // Below target — slow down gradually
-                            new_perc = power_management->fan_perc - FAN_DECREASE_RATE_PER_CYCLE;
+                            new_perc = power_management->fan_perc - fan_decrease_rate;
                         } else {
                             new_perc = pid_output;
                         }
