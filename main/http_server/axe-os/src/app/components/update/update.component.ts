@@ -53,8 +53,9 @@ export class UpdateComponent {
     const file = event.files[0];
     this.firmwareUpload.clear(); // clear the file upload component
 
-    if (!file.name.startsWith('gekkoaxe-firmware-') || !file.name.endsWith('.bin')) {
-      this.toastrService.error('Incorrect file. Please select a gekkoaxe-firmware-*.bin file.');
+    const validFirmware = file.name === 'esp-miner-gekko.bin' || (file.name.startsWith('gekkoaxe-firmware-') && file.name.endsWith('.bin'));
+    if (!validFirmware) {
+      this.toastrService.error('Incorrect file. Please select esp-miner-gekko.bin.');
       return;
     }
 
@@ -90,8 +91,9 @@ export class UpdateComponent {
     const file = event.files[0];
     this.websiteUpload.clear(); // clear the file upload component
 
-    if (!file.name.startsWith('gekkoaxe-www-') || !file.name.endsWith('.bin')) {
-      this.toastrService.error('Incorrect file. Please select a gekkoaxe-www-*.bin file.');
+    const validWWW = file.name === 'www-gekko.bin' || (file.name.startsWith('gekkoaxe-www-') && file.name.endsWith('.bin'));
+    if (!validWWW) {
+      this.toastrService.error('Incorrect file. Please select www-gekko.bin.');
       return;
     }
 

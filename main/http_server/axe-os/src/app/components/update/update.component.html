@@ -43,11 +43,11 @@
                                 <div class="text-orange-500 mb-3">Update available! Download both files:</div>
 
                                 <div *ngFor="let asset of latestRelease.assets">
-                                    <div *ngIf="asset.name.startsWith('gekkoaxe-firmware-') && asset.name.endsWith('.bin')">
+                                    <div *ngIf="asset.name === 'esp-miner-gekko.bin' || (asset.name.startsWith('gekkoaxe-firmware-') && asset.name.endsWith('.bin'))">
                                         <a style="text-decoration: underline;" target="_blank"
                                             [href]="asset.browser_download_url">{{asset.name}}</a>
                                     </div>
-                                    <div *ngIf="asset.name.startsWith('gekkoaxe-www-') && asset.name.endsWith('.bin')">
+                                    <div *ngIf="asset.name === 'www-gekko.bin' || (asset.name.startsWith('gekkoaxe-www-') && asset.name.endsWith('.bin'))">
                                         <a style="text-decoration: underline;" target="_blank"
                                             [href]="asset.browser_download_url">{{asset.name}}</a>
                                     </div>

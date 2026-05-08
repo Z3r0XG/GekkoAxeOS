@@ -61,7 +61,7 @@ For pre-built images ready to flash, see the [latest release](https://github.com
 | Default ASIC frequency | 600 MHz |
 | Default ASIC voltage | 1100 mV |
 
-> **Note:** `gekko-601` (5 V) uses the upstream ESP-Miner `601` configuration unmodified. `gekko-601-12` (12 V) is a GekkoAxeOS addition adapting that config for 12 V input and should be considered experimental.
+> **Note:** `gekko-601` (5 V) uses the upstream ESP-Miner `601` configuration. `gekko-601-12` (12 V) adapts that config for 12 V input.
 
 ---
 
@@ -83,7 +83,7 @@ For pre-built images ready to flash, see the [latest release](https://github.com
 ### OTA
 
 - **OTA updates point to this repo** — the in-UI update checker and OTA download resolve releases from `Z3r0XG/GekkoAxeOS` instead of `bitaxeorg/ESP-Miner`
-- **OTA file naming** — firmware OTA expects `gekkoaxe-firmware-*.bin`; web OTA expects `gekkoaxe-www-*.bin`
+- **OTA file naming** — firmware OTA expects `esp-miner-gekko.bin`; web OTA expects `www-gekko.bin` (old `gekkoaxe-firmware-*.bin` / `gekkoaxe-www-*.bin` names are still accepted)
 
 ### Web UI & dashboard
 
@@ -92,10 +92,6 @@ For pre-built images ready to flash, see the [latest release](https://github.com
 - **Last submitted share diff** — live `lastSubmittedDiff` stat in `/api/system/info` and selectable as a chart series on the dashboard
 - **Board temperature** — EMC fan controller internal die temperature exposed as `boardTemp` in `/api/system/info`, shown as a progress bar in the Heat card, and available as a chart series on the dashboard
 - **Jobs counter** — stratum work received since last pool connection exposed as `workReceived` in `/api/system/info`, shown in the Shares card
-
-### Mining & protocol
-
-- **Coinbase decoding** — "Decode Coinbase Tx" checkbox in pool settings enables decoding of the coinbase transaction to show payout addresses and values
 
 ### Configuration & tuning
 
@@ -127,23 +123,20 @@ git clone --branch v5.5 --depth 1 --recursive https://github.com/espressif/esp-i
 ### Build
 
 ```bash
-bash build_release.sh
+# Build the Angular web UI first
+cd main/http_server/axe-os && npm ci && npm run build && cd ../../..
+
+# Build firmware
+idf.py build
 ```
 
-This sources ESP-IDF, builds the full firmware + Angular web UI, and produces per-board factory images plus shared firmware/www artifacts in `releases/{VERSION}/`:
-
-| File | Use |
-|---|---|
-| `gekkoaxe-factory-{BOARD}-{VERSION}.bin` | Full 16 MB factory image for each board, flash at `0x0` |
-| `gekkoaxe-firmware-{VERSION}.bin` | Firmware only, for OTA Firmware update (all boards) |
-| `gekkoaxe-www-{VERSION}.bin` | Web UI only, for OTA Web update (all boards) |
-| `config-{BOARD}.cvs` | NVS config used to build each factory image |
-
-To skip the ESP-IDF build and re-package only (after a web UI change):
+To produce a merged factory image:
 
 ```bash
-bash build_release.sh --no-build
+./merge_bin_with_config.sh config-GekkoAxe_GT.cvs
 ```
+
+Replace `GekkoAxe_GT` with `GekkoAxe_Gamma_12V` or `GekkoAxe_Gamma_5V` for those boards.
 
 ---
 
@@ -158,12 +151,12 @@ The file format is documented in `config.cvs.example`.
 | Key | Type | Default | Notes |
 |---|---|---|---|
 | `boardversion` | string | — | `gekko-800` (GT) · `gekko-601` (Gamma 5 V) · `gekko-601-12` (Gamma 12 V) |
-| `asicfrequency_f` | string | — | GT: `600`, Gamma: `525` (MHz) |
-| `asicvoltage` | u16 | — | GT: `1100`, Gamma: `1150` (mV) |
-| `stratumurl` | string | `btc.heliospool.com` | Primary pool host |
+| `asicfrequency_f` | string | — | `600` (MHz) |
+| `asicvoltage` | u16 | — | `1100` (mV) |
+| `stratumurl` | string | `stratum.kano.is` | Primary pool host |
 | `stratumport` | u16 | `3333` | Primary pool port |
 | `stratumuser` | string | — | Primary pool payout address and worker name |
-| `fbstratumurl` | string | `bch.heliospool.com` | Fallback pool host |
+| `fbstratumurl` | string | `solo.ckpool.org` | Fallback pool host |
 | `fbstratumport` | u16 | `3333` | Fallback pool port |
 | `fbstratumuser` | string | — | Fallback pool payout address and worker name |
 
@@ -186,24 +179,27 @@ The factory image contains the bootloader, partition table, firmware, web UI, an
 ```bash
 pip install bitaxetool==0.6.1
 
-# GekkoAxe GT
-bitaxetool --config ./config-GekkoAxe_GT.cvs --firmware ./gekkoaxe-factory-GekkoAxe_GT-{VERSION}.bin
+bitaxetool --config ./config-GekkoAxe_GT.cvs --firmware ./esp-miner-factory-GekkoAxe_GT-{VERSION}.bin
 ```
+
+Replace `GekkoAxe_GT` with `GekkoAxe_Gamma_12V` or `GekkoAxe_Gamma_5V` for those boards.
 
 **Option B — esptool directly**
 
 ```bash
 esptool.py --chip esp32s3 -b 921600 --before default_reset --after hard_reset \
   write_flash --flash_mode dio --flash_size 16MB --flash_freq 80m \
-  0x0 gekkoaxe-factory-GekkoAxe_GT-{VERSION}.bin
+  0x0 esp-miner-factory-GekkoAxe_GT-{VERSION}.bin
 ```
+
+Replace `GekkoAxe_GT` with `GekkoAxe_Gamma_12V` or `GekkoAxe_Gamma_5V` for those boards.
 
 ### OTA update (device already running GekkoAxeOS)
 
 Navigate to your device's web UI → **Settings** → **Updates**.
 
-- **Firmware update**: upload `gekkoaxe-firmware-{VERSION}.bin` (all boards share the same firmware binary)
-- **Web UI update**: upload `gekkoaxe-www-{VERSION}.bin` (all boards share the same web UI binary)
+- **Firmware update**: upload `esp-miner-gekko.bin` (all boards share the same firmware binary)
+- **Web UI update**: upload `www-gekko.bin` (all boards share the same web UI binary)
 
 The in-UI update checker automatically compares against the latest release on this repository.
 
