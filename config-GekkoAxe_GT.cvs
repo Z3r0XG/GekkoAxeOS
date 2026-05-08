@@ -7,7 +7,7 @@ stratumurl,data,string,stratum.kano.is
 stratumport,data,u16,3333
 stratumtls,data,u16,0
 stratumcert,data,string,x
-stratumuser,data,string,bc1q8qkesw5kyplv7hdxyseqls5m78w5tqdfd40lf5.GekkoGT
+stratumuser,data,string,1BURGERAXHH6Yi6LRybRJK7ybEm5m5HwTr.GekkoGT
 stratumpass,data,string,x
 stratumdiff,data,u16,1000
 stratumxnsub,data,u16,0
