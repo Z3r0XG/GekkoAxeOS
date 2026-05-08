@@ -44,8 +44,8 @@ For pre-built images ready to flash, see the [latest release](https://github.com
 | Fan controller | EMC2101 |
 | MCU | ESP32-S3-WROOM-1 N16R8 (16 MB Flash, 8 MB Octal SPI PSRAM) |
 | Input voltage | 5 V |
-| Default ASIC frequency | 525 MHz |
-| Default ASIC voltage | 1150 mV |
+| Default ASIC frequency | 600 MHz |
+| Default ASIC voltage | 1100 mV |
 
 ### GekkoAxe Gamma 12 V
 
@@ -58,8 +58,8 @@ For pre-built images ready to flash, see the [latest release](https://github.com
 | Fan controller | EMC2101 |
 | MCU | ESP32-S3-WROOM-1 N16R8 (16 MB Flash, 8 MB Octal SPI PSRAM) |
 | Input voltage | 12 V |
-| Default ASIC frequency | 525 MHz |
-| Default ASIC voltage | 1150 mV |
+| Default ASIC frequency | 600 MHz |
+| Default ASIC voltage | 1100 mV |
 
 > **Note:** `gekko-601` (5 V) uses the upstream ESP-Miner `601` configuration unmodified. `gekko-601-12` (12 V) is a GekkoAxeOS addition adapting that config for 12 V input and should be considered experimental.
 
@@ -95,7 +95,7 @@ For pre-built images ready to flash, see the [latest release](https://github.com
 
 ### Mining & protocol
 
-- **BCH coinbase decoding** — "Decode Coinbase Tx" is now a dropdown: Auto / BTC / BCH / Disabled. Auto detects the coin from your payout address. BCH outputs decode to correct CashAddr; share star (★) and percentage work across all BCH address formats
+- **Coinbase decoding** — "Decode Coinbase Tx" checkbox in pool settings enables decoding of the coinbase transaction to show payout addresses and values
 
 ### Configuration & tuning
 

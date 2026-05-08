@@ -261,8 +261,8 @@ components:
           type: string
           description: Fallback stratum TLS cert
         fallbackStratumDecodeCoinbase:
-          type: integer
-          description: Coinbase decode mode for fallback pool (0=off, 1=BTC, 2=BCH, 3=Auto)
+          type: boolean
+          description: Enable coinbase decoding for fallback pool
         fanrpm:
           type: number
           description: Current fan speed in RPM
@@ -410,8 +410,8 @@ components:
           type: string
           description: Primary stratum TLS cert
         stratumDecodeCoinbase:
-          type: integer
-          description: Coinbase decode mode for primary pool (0=off, 1=BTC, 2=BCH, 3=Auto)
+          type: boolean
+          description: Enable coinbase decoding for primary pool
         temp:
           type: number
           description: Average chip temperature

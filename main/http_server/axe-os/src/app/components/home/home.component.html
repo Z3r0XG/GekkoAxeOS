@@ -194,6 +194,12 @@
                     <span class="text-500 text-lg">session best</span>
                     <span class="text-sm font-medium mb-3"> ({{ info.uptimeSeconds | dateAgo: { intervals: 2, strict:true, short:true } }})</span>
                 </div>
+                <div>
+                    <span class="text-900 font-medium cursor-pointer" pTooltip="{{info.lastSubmittedDiff | number:'1.0-0'}}" tooltipPosition="bottom">
+                        {{info.lastSubmittedDiff | diffSuffix}}
+                    </span>
+                    <span class="text-500 text-lg">last submitted</span>
+                </div>
             </div>
         </div>
 
@@ -526,10 +532,10 @@
                 </div>
                 <div class="flex flex-nowrap justify-content-between" *ngIf="info.coinbaseOutputs.length > 0">
                     <div class="col-fixed-width text-500">
-                        <tooltip-text-icon text="Value" [tooltip]="'Total value of transaction outputs in ' + getCoinLabel(info)" />
+                        <tooltip-text-icon text="Value" tooltip="Total value of transaction outputs in BTC. For non-bitcoin chains, disable 'Decode Coinbase Tx' in Advanced Pool Options." />
                     </div>
                     <ng-container *ngIf="info.coinbaseValueTotalSatoshis && info.coinbaseValueTotalSatoshis > 0">
-                        {{ info.coinbaseValueTotalSatoshis | sats:getCoinLabel(info) }}
+                        {{ info.coinbaseValueTotalSatoshis | sats }}
                     </ng-container>
                 </div>                
                 <div class="flex flex-nowrap align-items-baseline" *ngIf="info.coinbaseOutputs.length > 0">
@@ -539,12 +545,12 @@
                     <div class="w-full">
                         <div *ngFor="let output of info.coinbaseOutputs; let i = index" class="flex justify-content-between">
                             @if (output.value > 0) {
-                                @if (output.isUserOutput) {
+                                @if (output.address === getAddressPart(activePoolUser)) {
                                     <span><span class="text-monospace text-sm font-bold" pTooltip="Your payout address" tooltipPosition="top" sensitive-data>{{ output.address | address }}</span>&nbsp;<i class="pi pi-star-fill text-xs"></i></span>
                                 } @else {
                                     <span class="text-monospace text-sm" pTooltip="{{ output.address }}" tooltipPosition="top">{{ output.address | address }}</span>
                                 }
-                                <span class="text-sm">{{ output.value | sats:getCoinLabel(info) }}</span>
+                                <span class="text-sm">{{ output.value | sats }}</span>
                             } @else {
                                 <span class="text-monospace text-xs">{{ output.address }}</span>
                             }

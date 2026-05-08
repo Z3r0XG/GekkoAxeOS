@@ -3,7 +3,7 @@ main,namespace,,
 hostname,data,string,GekkoAxe
 wifissid,data,string,
 wifipass,data,string,
-stratumurl,data,string,btc.heliospool.com
+stratumurl,data,string,stratum.kano.is
 stratumport,data,u16,3333
 stratumtls,data,u16,0
 stratumcert,data,string,x
@@ -11,16 +11,14 @@ stratumuser,data,string,bc1q8qkesw5kyplv7hdxyseqls5m78w5tqdfd40lf5.GekkoGT
 stratumpass,data,string,x
 stratumdiff,data,u16,1000
 stratumxnsub,data,u16,0
-stratumdecode2,data,u16,3
-fbstratumurl,data,string,bch.heliospool.com
+fbstratumurl,data,string,solo.ckpool.org
 fbstratumport,data,u16,3333
 fbstratumtls,data,u16,0
 fbstratumcert,data,string,x
-fbstratumuser,data,string,qz85msghggld3smflk8flv0yza4c0c5drqgdgeruug.GekkoGT
+fbstratumuser,data,string,1BURGERAXHH6Yi6LRybRJK7ybEm5m5HwTr.GekkoGT
 fbstratumpass,data,string,x
 fbstratumdiff,data,u16,1000
 stratumfbxnsub,data,u16,0
-fbstratumdec2,data,u16,3
 asicfrequency_f,data,string,600
 asicvoltage,data,u16,1100
 boardversion,data,string,gekko-800
